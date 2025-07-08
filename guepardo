@@ -1,0 +1,30 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * GuepardoSys CLI Tool
+ * 
+ * Ferramenta de linha de comando para desenvolvimento
+ */
+
+// Definir constantes
+define('BASE_PATH', __DIR__);
+define('APP_PATH', BASE_PATH . '/app');
+define('STORAGE_PATH', BASE_PATH . '/storage');
+
+// Autoload
+require_once BASE_PATH . '/vendor/autoload.php';
+
+// Carregar ambiente
+$dotenv = Dotenv\Dotenv::createImmutable(BASE_PATH);
+$dotenv->safeLoad();
+
+use GuepardoSys\CLI\Console;
+
+try {
+    $console = new Console();
+    $console->run($argv);
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage() . PHP_EOL;
+    exit(1);
+}

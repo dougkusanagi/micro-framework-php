@@ -101,22 +101,22 @@ Este plano divide a implementação do GuepardoSys Micro PHP em etapas increment
 **Objetivo**: Criar ferramenta de linha de comando para auxiliar desenvolvimento.
 
 ### 4.1 Estrutura da CLI
-- [ ] Criar script executável `guepardo`
-- [ ] Sistema de roteamento de comandos
-- [ ] Bootstrap mínimo para CLI
+- [x] Criar script executável `guepardo`
+- [x] Sistema de roteamento de comandos
+- [x] Bootstrap mínimo para CLI
 
 ### 4.2 Comandos de Desenvolvimento
-- [ ] `serve` - servidor de desenvolvimento
-- [ ] `make:controller` - geração de controllers
-- [ ] `make:model` - geração de models
-- [ ] `route:list` - listagem de rotas
+- [x] `serve` - servidor de desenvolvimento
+- [x] `make:controller` - geração de controllers
+- [x] `make:model` - geração de models
+- [x] `route:list` - listagem de rotas
 
 ### 4.3 Templates/Stubs
-- [ ] Criar stubs para controllers
-- [ ] Criar stubs para models
-- [ ] Sistema de substituição de variáveis nos stubs
+- [x] Criar stubs para controllers
+- [x] Criar stubs para models
+- [x] Sistema de substituição de variáveis nos stubs
 
-**Entregável**: CLI funcional com comandos básicos de desenvolvimento.
+**Entregável**: CLI funcional com comandos básicos de desenvolvimento. ✅ **CONCLUÍDO**
 
 ---
 
