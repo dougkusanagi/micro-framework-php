@@ -41,7 +41,7 @@ Este plano divide a implementação do GuepardoSys Micro PHP em etapas increment
 - [x] Criar `.htaccess` para Apache
 - [x] Documentar configuração Nginx
 
-**Entregável**: Sistema que responde a rotas básicas e exibe views simples.
+**Entregável**: Sistema que responde a rotas básicas e exibe views simples. ✅ **CONCLUÍDO**
 
 ---
 
