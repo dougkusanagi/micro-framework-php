@@ -8,9 +8,9 @@
 // Define start time for performance tracking
 define('GUEPARDO_START', microtime(true));
 
-// Check if we're running PHP 8.4 or higher
-if (version_compare(PHP_VERSION, '8.4.0', '<')) {
-    die('GuepardoSys requires PHP 8.4 or higher. Current version: ' . PHP_VERSION);
+// Check if we're running PHP 8.3 or higher
+if (version_compare(PHP_VERSION, '8.3.0', '<')) {
+    die('GuepardoSys requires PHP 8.3 or higher. Current version: ' . PHP_VERSION);
 }
 
 // Define path constants
