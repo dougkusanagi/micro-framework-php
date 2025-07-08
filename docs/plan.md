@@ -16,30 +16,30 @@ Este plano divide a implementação do GuepardoSys Micro PHP em etapas increment
 - [x] Criar `.gitignore` apropriado
 
 ### 1.2 Bootstrap e Entrypoint
-- [ ] Implementar `public/index.php` - ponto de entrada
-- [ ] Criar `bootstrap/app.php` - inicialização da aplicação
-- [ ] Implementar classe `App` principal
-- [ ] Configurar carregamento básico de variáveis de ambiente
+- [x] Implementar `public/index.php` - ponto de entrada
+- [x] Criar `bootstrap/app.php` - inicialização da aplicação
+- [x] Implementar classe `App` principal
+- [x] Configurar carregamento básico de variáveis de ambiente
 
 ### 1.3 Roteamento Básico
-- [ ] Implementar classe `Router` simples
-- [ ] Criar sistema de matching de rotas com regex
-- [ ] Implementar despacho para controllers
-- [ ] Criar `routes/web.php` com definições de rotas
+- [x] Implementar classe `Router` simples
+- [x] Criar sistema de matching de rotas com regex
+- [x] Implementar despacho para controllers
+- [x] Criar `routes/web.php` com definições de rotas
 
 ### 1.4 Controllers Base
-- [ ] Criar `BaseController` com métodos auxiliares
-- [ ] Implementar `HomeController` como exemplo
-- [ ] Sistema básico de instanciação e chamada de métodos
+- [x] Criar `BaseController` com métodos auxiliares
+- [x] Implementar `HomeController` como exemplo
+- [x] Sistema básico de instanciação e chamada de métodos
 
 ### 1.5 Views Básicas (sem template engine)
-- [ ] Sistema simples de include de views PHP puras
-- [ ] Método `view()` para carregamento de views
-- [ ] Estrutura básica em `app/Views/`
+- [x] Sistema simples de include de views PHP puras
+- [x] Método `view()` para carregamento de views
+- [x] Estrutura básica em `app/Views/`
 
 ### 1.6 Configuração Servidor Web
-- [ ] Criar `.htaccess` para Apache
-- [ ] Documentar configuração Nginx
+- [x] Criar `.htaccess` para Apache
+- [x] Documentar configuração Nginx
 
 **Entregável**: Sistema que responde a rotas básicas e exibe views simples.
 
