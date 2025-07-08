@@ -21,7 +21,11 @@
         "psr-4": {
             "App\\": "app/",
             "GuepardoSys\\": "src/"
-        }
+        },
+        "files": [
+            "src/Core/View/helpers.php",
+            "src/Core/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

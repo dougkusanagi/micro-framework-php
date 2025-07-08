@@ -12,9 +12,17 @@ use GuepardoSys\Core\Response;
 abstract class BaseController
 {
     /**
-     * Render a view
+     * Render a view using PHP includes (fallback para quando template engine tem problemas)
      */
     protected function view(string $view, array $data = []): string
+    {
+        return $this->viewLegacy($view, $data);
+    }
+
+    /**
+     * Render a view using PHP includes (legacy method)
+     */
+    protected function viewLegacy(string $view, array $data = []): string
     {
         $viewPath = APP_PATH . '/Views/' . str_replace('.', '/', $view) . '.php';
 

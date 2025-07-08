@@ -50,24 +50,24 @@ Este plano divide a implementação do GuepardoSys Micro PHP em etapas increment
 **Objetivo**: Implementar motor de templates inspirado no Blade para melhorar a experiência de desenvolvimento.
 
 ### 2.1 Motor de Template Base
-- [ ] Implementar classe `View` com sistema de compilação
-- [ ] Sistema de cache em `storage/cache/`
-- [ ] Compilação de `{{ $variavel }}` para PHP
-- [ ] Escape automático para segurança (XSS)
+- [x] Implementar classe `View` com sistema de compilação
+- [x] Sistema de cache em `storage/cache/`
+- [x] Compilação de `{{ $variavel }}` para PHP
+- [x] Escape automático para segurança (XSS)
 
 ### 2.2 Diretivas de Template
-- [ ] Implementar `@extends` e `@yield`
-- [ ] Implementar `@section` e `@endsection`
-- [ ] Implementar `@include`
-- [ ] Implementar `@if`, `@else`, `@endif`
-- [ ] Implementar `@foreach`, `@endforeach`
+- [x] Implementar `@extends` e `@yield`
+- [x] Implementar `@section` e `@endsection`
+- [x] Implementar `@include`
+- [x] Implementar `@if`, `@else`, `@endif`
+- [x] Implementar `@foreach`, `@endforeach`
 
 ### 2.3 Sistema de Layouts
-- [ ] Criar layout base em `app/Views/layouts/`
-- [ ] Sistema de herança de templates
-- [ ] Gestão de seções e yields
+- [x] Criar layout base em `app/Views/layouts/`
+- [x] Sistema de herança de templates
+- [x] Gestão de seções e yields
 
-**Entregável**: Sistema de templates funcional com sintaxe amigável.
+**Entregável**: Sistema de templates funcional com sintaxe amigável. ✅ **CONCLUÍDO**
 
 ---
 
@@ -76,23 +76,23 @@ Este plano divide a implementação do GuepardoSys Micro PHP em etapas increment
 **Objetivo**: Adicionar capacidade de interação com banco de dados através de Models.
 
 ### 3.1 Configuração de Banco
-- [ ] Implementar carregamento de configurações de BD
-- [ ] Criar classe de conexão PDO
-- [ ] Sistema de configuração em `config/database.php`
-- [ ] Suporte a múltiplos SGBDs (MySQL, PostgreSQL)
+- [x] Implementar carregamento de configurações de BD
+- [x] Criar classe de conexão PDO
+- [x] Sistema de configuração em `config/database.php`
+- [x] Suporte a múltiplos SGBDs (MySQL, PostgreSQL)
 
 ### 3.2 Base Model
-- [ ] Implementar `BaseModel` com PDO
-- [ ] Métodos CRUD básicos (`find`, `all`, `create`, `update`, `delete`)
-- [ ] Sistema de tabelas automático por convenção
-- [ ] Prepared statements para segurança
+- [x] Implementar `BaseModel` com PDO
+- [x] Métodos CRUD básicos (`find`, `all`, `create`, `update`, `delete`)
+- [x] Sistema de tabelas automático por convenção
+- [x] Prepared statements para segurança
 
 ### 3.3 Model de Exemplo
-- [ ] Criar `User` model como exemplo
-- [ ] Implementar relacionamentos simples
-- [ ] Validação básica de dados
+- [x] Criar `User` model como exemplo
+- [x] Implementar relacionamentos simples
+- [x] Validação básica de dados
 
-**Entregável**: Sistema de Models funcional com operações CRUD.
+**Entregável**: Sistema de Models funcional com operações CRUD. ✅ **CONCLUÍDO**
 
 ---
 

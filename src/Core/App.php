@@ -5,6 +5,7 @@ namespace GuepardoSys\Core;
 use GuepardoSys\Core\Router;
 use GuepardoSys\Core\Request;
 use GuepardoSys\Core\Response;
+use GuepardoSys\Core\Database;
 
 /**
  * Main Application Class
@@ -42,6 +43,9 @@ class App
     {
         // Register router as singleton
         $this->container->singleton(Router::class);
+
+        // Register database as singleton
+        $this->container->singleton(Database::class);
 
         // Register request
         $this->container->bind(Request::class, function () {
