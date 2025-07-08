@@ -40,39 +40,16 @@ class HelpCommand extends BaseCommand
         echo "\033[33mAvailable Commands:\033[0m" . PHP_EOL;
         echo PHP_EOL;
 
-        $commands = [
-            'serve' => [
-                'description' => 'Start the development server',
-                'usage' => 'serve [host] [port]',
-                'example' => 'serve localhost 8000'
-            ],
-            'make:controller' => [
-                'description' => 'Generate a new controller',
-                'usage' => 'make:controller <name>',
-                'example' => 'make:controller UserController'
-            ],
-            'make:model' => [
-                'description' => 'Generate a new model',
-                'usage' => 'make:model <name>',
-                'example' => 'make:model Product'
-            ],
-            'route:list' => [
-                'description' => 'List all registered routes',
-                'usage' => 'route:list',
-                'example' => 'route:list'
-            ],
-            'help' => [
-                'description' => 'Show this help message',
-                'usage' => 'help',
-                'example' => 'help'
-            ]
-        ];
+        // Get commands from Console class
+        $console = new \GuepardoSys\CLI\Console();
+        $commands = $console->getCommands();
 
-        foreach ($commands as $name => $info) {
-            echo "\033[32m  {$name}\033[0m" . PHP_EOL;
-            echo "    {$info['description']}" . PHP_EOL;
-            echo "    \033[90mUsage: ./guepardo {$info['usage']}\033[0m" . PHP_EOL;
-            echo "    \033[90mExample: ./guepardo {$info['example']}\033[0m" . PHP_EOL;
+        foreach ($commands as $name => $class) {
+            if ($name === 'help') continue; // Skip help command to avoid recursion
+
+            $command = new $class();
+            echo "  \033[32m{$name}\033[0m" . PHP_EOL;
+            echo "    {$command->getDescription()}" . PHP_EOL;
             echo PHP_EOL;
         }
     }

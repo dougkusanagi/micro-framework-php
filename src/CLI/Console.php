@@ -7,6 +7,15 @@ use GuepardoSys\CLI\Commands\MakeControllerCommand;
 use GuepardoSys\CLI\Commands\MakeModelCommand;
 use GuepardoSys\CLI\Commands\RouteListCommand;
 use GuepardoSys\CLI\Commands\HelpCommand;
+use GuepardoSys\CLI\Commands\MigrateUpCommand;
+use GuepardoSys\CLI\Commands\MigrateDownCommand;
+use GuepardoSys\CLI\Commands\MigrateSeedCommand;
+use GuepardoSys\CLI\Commands\MigrateStatusCommand;
+use GuepardoSys\CLI\Commands\MakeMigrationCommand;
+use GuepardoSys\CLI\Commands\MigrateCommand;
+use GuepardoSys\CLI\Commands\MigrateRollbackCommand;
+use GuepardoSys\CLI\Commands\MigrateRefreshCommand;
+use GuepardoSys\CLI\Commands\DbSeedCommand;
 
 /**
  * Console Application
@@ -29,7 +38,21 @@ class Console
             'serve' => ServeCommand::class,
             'make:controller' => MakeControllerCommand::class,
             'make:model' => MakeModelCommand::class,
+            'make:migration' => MakeMigrationCommand::class,
             'route:list' => RouteListCommand::class,
+
+            // Main migration commands (Artisan style)
+            'migrate' => MigrateCommand::class,
+            'migrate:rollback' => MigrateRollbackCommand::class,
+            'migrate:refresh' => MigrateRefreshCommand::class,
+            'migrate:status' => MigrateStatusCommand::class,
+            'db:seed' => DbSeedCommand::class,
+
+            // Legacy migration commands (backward compatibility)
+            'migrate:up' => MigrateUpCommand::class,
+            'migrate:down' => MigrateDownCommand::class,
+            'migrate:seed' => MigrateSeedCommand::class,
+
             'help' => HelpCommand::class,
         ];
     }

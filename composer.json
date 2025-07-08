@@ -9,8 +9,7 @@
         }
     ],
     "require": {
-        "php": "^8.3",
-        "vlucas/phpdotenv": "^5.5"
+        "php": "^8.3"
     },
     "require-dev": {
         "pestphp/pest": "^2.0",

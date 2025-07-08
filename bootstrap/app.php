@@ -11,12 +11,12 @@
 
 use GuepardoSys\Core\App;
 use GuepardoSys\Core\Container;
-use Dotenv\Dotenv;
+use GuepardoSys\Core\Dotenv;
 
 // Load environment variables
 if (file_exists(BASE_PATH . '/.env')) {
     $dotenv = Dotenv::createImmutable(BASE_PATH);
-    $dotenv->load();
+    $dotenv->safeLoad();
 }
 
 // Create dependency container

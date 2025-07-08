@@ -79,6 +79,23 @@ php -S localhost:8000 -t public
 - **Inicialização**: Extremamente rápida
 - **Memória**: Baixo consumo de recursos
 
+## 🎯 Características Principais
+
+- **Zero Dependencies**: Framework com dependências mínimas para runtime
+- **Hospedagem Compartilhada**: Otimizado para ambientes restritivos
+- **Implementação Custom**: Sistema próprio de environment variables
+- **Performance**: TTFB < 50ms em produção
+- **Simplicidade**: Curva de aprendizado suave
+- **CLI Tool**: Ferramenta de linha de comando para desenvolvimento
+
+## 🔧 Tecnologias
+
+- **PHP**: 8.3+ (compatível com 8.4)
+- **Composer**: Gerenciamento de dependências
+- **Environment**: Sistema próprio de variáveis de ambiente (zero dependencies)
+- **Templates**: Motor de templates inspirado no Blade
+- **Database**: PDO com suporte a MySQL e PostgreSQL
+
 ## 🤝 Contribuição
 
 Este projeto está em desenvolvimento ativo. Consulte o arquivo `/docs/plan.md` para ver o plano completo de implementação.

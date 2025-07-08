@@ -16,7 +16,9 @@ define('STORAGE_PATH', BASE_PATH . '/storage');
 require_once BASE_PATH . '/vendor/autoload.php';
 
 // Carregar ambiente
-$dotenv = Dotenv\Dotenv::createImmutable(BASE_PATH);
+use GuepardoSys\Core\Dotenv;
+
+$dotenv = Dotenv::createImmutable(BASE_PATH);
 $dotenv->safeLoad();
 
 use GuepardoSys\CLI\Console;

@@ -69,7 +69,7 @@ Para minimizar o uso de inodes e manter a clareza, a seguinte estrutura de diret
 
     bootstrap/app.php:
 
-        Carrega as variáveis de ambiente do .env para $_ENV e $_SERVER (usando um pacote leve como vlucas/phpdotenv).
+        Carrega as variáveis de ambiente do .env para $_ENV e $_SERVER usando uma implementação própria e leve.
 
         Cria uma instância de um Container de Injeção de Dependência (DI) simples para gerenciar serviços como o Router e a conexão com o BD.
 
