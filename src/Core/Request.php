@@ -57,6 +57,30 @@ class Request
     }
 
     /**
+     * Create Request from globals
+     */
+    public static function createFromGlobals(): self
+    {
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        $query = $_GET ?? [];
+        $data = $_POST ?? [];
+        $files = $_FILES ?? [];
+
+        // Parse headers
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (strpos($name, 'HTTP_') === 0) {
+                $headerName = str_replace('HTTP_', '', $name);
+                $headerName = str_replace('_', '-', $headerName);
+                $headers[strtolower($headerName)] = $value;
+            }
+        }
+
+        return new self($method, $uri, $query, $data, $files, $headers);
+    }
+
+    /**
      * Get all headers
      */
     private static function getHeaders(): array
@@ -177,5 +201,34 @@ class Request
     public function isSecure(): bool
     {
         return !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    }
+
+    /**
+     * Route parameters
+     */
+    private array $routeParams = [];
+
+    /**
+     * Set route parameters
+     */
+    public function setRouteParams(array $params): void
+    {
+        $this->routeParams = $params;
+    }
+
+    /**
+     * Get route parameter
+     */
+    public function getRouteParam(string $key, mixed $default = null): mixed
+    {
+        return $this->routeParams[$key] ?? $default;
+    }
+
+    /**
+     * Get all route parameters
+     */
+    public function getRouteParams(): array
+    {
+        return $this->routeParams;
     }
 }

@@ -9,11 +9,21 @@
 
 use App\Controllers\HomeController;
 use App\Controllers\UsersController;
+use App\Controllers\SimpleAuthController;
 
 return [
     ['GET', '/', [HomeController::class, 'index']],
     ['GET', '/about', [HomeController::class, 'about']],
     ['GET', '/teste', [HomeController::class, 'teste']],
+    ['GET', '/frontend-demo', [HomeController::class, 'frontendDemo']],
+
+    // Authentication routes - using SimpleAuthController temporarily
+    ['GET', '/login', [SimpleAuthController::class, 'showLogin']],
+    ['POST', '/login', [SimpleAuthController::class, 'login']],
+    ['GET', '/register', [SimpleAuthController::class, 'showRegister']],
+    ['POST', '/register', [SimpleAuthController::class, 'register']],
+    ['GET', '/logout', [SimpleAuthController::class, 'logout']],
+    ['GET', '/dashboard', [SimpleAuthController::class, 'dashboard']],
 
     // Users CRUD routes
     ['GET', '/users', [UsersController::class, 'index']],

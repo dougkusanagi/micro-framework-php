@@ -1,0 +1,28 @@
+{
+    "name": "guepardo-micro-framework",
+    "version": "1.0.0",
+    "description": "Micro PHP Framework with modern frontend workflow",
+    "main": "index.js",
+    "scripts": {
+        "dev": "bun run dev:css --watch",
+        "build": "bun run build:css && bun run build:js",
+        "dev:css": "tailwindcss -i ./public/assets/css/input.css -o ./public/assets/css/output.css --watch",
+        "build:css": "tailwindcss -i ./public/assets/css/input.css -o ./public/assets/css/output.css --minify",
+        "build:js": "echo 'JS bundling ready for future implementation'",
+        "watch": "bun run dev"
+    },
+    "keywords": [
+        "php",
+        "framework",
+        "micro",
+        "mvc"
+    ],
+    "author": "GuepardoSys",
+    "license": "MIT",
+    "devDependencies": {
+        "tailwindcss": "^3.4.0",
+        "@tailwindcss/forms": "^0.5.7",
+        "@tailwindcss/typography": "^0.5.10"
+    },
+    "dependencies": {}
+}

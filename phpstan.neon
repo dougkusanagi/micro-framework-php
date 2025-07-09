@@ -1,0 +1,22 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - app
+    excludePaths:
+        - vendor
+        - storage
+        - tests/_support
+    tmpDir: storage/cache/phpstan
+    ignoreErrors:
+        - '#Call to an undefined method PDO::#'
+        - '#Undefined variable: \$#'
+        - '#Access to an undefined property#'
+        -
+            identifier: missingType.iterableValue
+        -
+            identifier: missingType.generics
+    universalObjectCratesClasses:
+        - stdClass
+    bootstrapFiles:
+        - vendor/autoload.php

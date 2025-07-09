@@ -6,6 +6,9 @@ use GuepardoSys\Core\Router;
 use GuepardoSys\Core\Request;
 use GuepardoSys\Core\Response;
 use GuepardoSys\Core\Database;
+use GuepardoSys\Core\Logger;
+use GuepardoSys\Core\ErrorHandler;
+use GuepardoSys\Core\Security\SecurityHeaders;
 
 /**
  * Main Application Class
@@ -14,6 +17,8 @@ class App
 {
     private Container $container;
     private Router $router;
+    private Logger $logger;
+    private ErrorHandler $errorHandler;
 
     public function __construct(Container $container)
     {
@@ -26,6 +31,17 @@ class App
      */
     private function bootstrap(): void
     {
+        // Initialize logger
+        $this->logger = new Logger();
+
+        // Initialize error handler
+        $debug = (bool)($_ENV['APP_DEBUG'] ?? false);
+        $this->errorHandler = new ErrorHandler($this->logger, $debug);
+        $this->errorHandler->register();
+
+        // Set security headers
+        SecurityHeaders::setAll();
+
         // Register core services
         $this->registerCoreServices();
 

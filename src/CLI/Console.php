@@ -16,6 +16,13 @@ use GuepardoSys\CLI\Commands\MigrateCommand;
 use GuepardoSys\CLI\Commands\MigrateRollbackCommand;
 use GuepardoSys\CLI\Commands\MigrateRefreshCommand;
 use GuepardoSys\CLI\Commands\DbSeedCommand;
+use GuepardoSys\CLI\Commands\AssetCommand;
+use GuepardoSys\CLI\Commands\CacheClearCommand;
+use GuepardoSys\CLI\Commands\OptimizeCommand;
+use GuepardoSys\CLI\Commands\TestCommand;
+use GuepardoSys\CLI\Commands\StanCommand;
+use GuepardoSys\CLI\Commands\CsCommand;
+use GuepardoSys\CLI\Commands\QualityCommand;
 
 /**
  * Console Application
@@ -53,6 +60,23 @@ class Console
             'migrate:down' => MigrateDownCommand::class,
             'migrate:seed' => MigrateSeedCommand::class,
 
+            // Asset commands
+            'asset:build' => AssetCommand::class . '@build',
+            'asset:dev' => AssetCommand::class . '@dev',
+            'asset:clean' => AssetCommand::class . '@clean',
+
+            // Cache commands
+            'cache:clear' => CacheClearCommand::class,
+
+            // Optimization commands
+            'optimize' => OptimizeCommand::class,
+
+            // Quality and testing commands
+            'test' => TestCommand::class,
+            'stan' => StanCommand::class,
+            'cs' => CsCommand::class,
+            'quality' => QualityCommand::class,
+
             'help' => HelpCommand::class,
         ];
     }
@@ -71,9 +95,17 @@ class Console
             return;
         }
 
-        $commandClass = $this->commands[$commandName];
-        $command = new $commandClass();
-        $command->execute($args);
+        $commandConfig = $this->commands[$commandName];
+
+        // Check if command has specific method
+        if (strpos($commandConfig, '@') !== false) {
+            [$commandClass, $method] = explode('@', $commandConfig);
+            $command = new $commandClass($this);
+            $command->$method($args);
+        } else {
+            $command = new $commandConfig();
+            $command->execute($args);
+        }
     }
 
     /**
@@ -102,5 +134,33 @@ class Console
     public function getCommands(): array
     {
         return $this->commands;
+    }
+
+    /**
+     * Output methods for colored console output
+     */
+    public function info(string $message): void
+    {
+        echo "\033[34m{$message}\033[0m\n";
+    }
+
+    public function success(string $message): void
+    {
+        echo "\033[32m{$message}\033[0m\n";
+    }
+
+    public function error(string $message): void
+    {
+        echo "\033[31m{$message}\033[0m\n";
+    }
+
+    public function warning(string $message): void
+    {
+        echo "\033[33m{$message}\033[0m\n";
+    }
+
+    public function line(string $message): void
+    {
+        echo "{$message}\n";
     }
 }

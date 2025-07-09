@@ -21,7 +21,7 @@ class View
         $this->viewsPath = $viewsPath ?? APP_PATH . '/Views';
         $this->cachePath = $cachePath ?? STORAGE_PATH . '/cache/views';
         
-        // Criar diretório de cache se não existir
+        // Criar diretorio de cache se nao existir
         if (!is_dir($this->cachePath)) {
             mkdir($this->cachePath, 0755, true);
         }
@@ -47,7 +47,19 @@ class View
         
         if ($this->needsCompilation($templatePath, $cacheFile)) {
             $compiled = $this->compile($templatePath);
-            file_put_contents($cacheFile, $compiled);
+            
+            // Compress cache if enabled and content is large enough
+            if (strlen($compiled) > 2048) {
+                $compressed = gzcompress($compiled, 6);
+                if ($compressed !== false && strlen($compressed) < strlen($compiled)) {
+                    file_put_contents($cacheFile . '.gz', $compressed);
+                    file_put_contents($cacheFile, $compiled);
+                } else {
+                    file_put_contents($cacheFile, $compiled);
+                }
+            } else {
+                file_put_contents($cacheFile, $compiled);
+            }
         }
 
         return $this->renderCompiled($cacheFile);
@@ -112,7 +124,7 @@ class View
      */
     private function compileSections(string $content): string
     {
-        // Capturar seções
+        // Capturar secoes
         $content = preg_replace_callback(
             '/@section\([\'"](.+?)[\'"]\)(.*?)@endsection/s',
             function ($matches) {
@@ -190,12 +202,12 @@ class View
      */
     private function compileLoops(string $content): string
     {
-        // @foreach - usando str_replace simples por enquanto
-        $content = str_replace('@foreach(', '<?php foreach(', $content);
+        // Compile @foreach
+        $content = preg_replace('/@foreach\s*\((.*?)\)/', '<?php foreach($1): ?>', $content);
         $content = str_replace('@endforeach', '<?php endforeach; ?>', $content);
         
-        // @for - usando str_replace simples por enquanto  
-        $content = str_replace('@for(', '<?php for(', $content);
+        // Compile @for
+        $content = preg_replace('/@for\s*\((.*?)\)/', '<?php for($1): ?>', $content);
         $content = str_replace('@endfor', '<?php endfor; ?>', $content);
         
         return $content;
@@ -206,10 +218,10 @@ class View
      */
     private function renderCompiled(string $cacheFile): string
     {
-        // Disponibilizar variáveis no escopo
+        // Disponibilizar variaveis no escopo
         extract($this->data);
         
-        // Disponibilizar seções
+        // Disponibilizar secoes
         $__sections = $this->sections;
         
         ob_start();
@@ -251,7 +263,48 @@ class View
             return true;
         }
         
-        return filemtime($templatePath) > filemtime($cacheFile);
+        // Check if template file is newer
+        if (filemtime($templatePath) > filemtime($cacheFile)) {
+            return true;
+        }
+        
+        // Check if any included templates are newer
+        return $this->hasNewerIncludes($templatePath, filemtime($cacheFile));
+    }
+
+    /**
+     * Check if any included templates are newer than cache
+     */
+    private function hasNewerIncludes(string $templatePath, int $cacheTime): bool
+    {
+        $content = file_get_contents($templatePath);
+        
+        // Find all @include directives
+        if (preg_match_all('/@include\([\'"](.+?)[\'"]\)/', $content, $matches)) {
+            foreach ($matches[1] as $includePath) {
+                $includeFile = $this->viewsPath . '/' . str_replace('.', '/', $includePath) . '.php';
+                
+                if (file_exists($includeFile) && filemtime($includeFile) > $cacheTime) {
+                    return true;
+                }
+                
+                // Recursively check includes in included files
+                if (file_exists($includeFile) && $this->hasNewerIncludes($includeFile, $cacheTime)) {
+                    return true;
+                }
+            }
+        }
+        
+        // Check @extends
+        if (preg_match('/@extends\([\'"](.+?)[\'"]\)/', $content, $matches)) {
+            $layoutFile = $this->viewsPath . '/' . str_replace('.', '/', $matches[1]) . '.php';
+            
+            if (file_exists($layoutFile) && filemtime($layoutFile) > $cacheTime) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**

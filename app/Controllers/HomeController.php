@@ -88,4 +88,17 @@ class HomeController extends BaseController
 
         return $this->view('pages.teste', $data);
     }
+
+    /**
+     * Display the frontend demo page
+     */
+    public function frontendDemo(): string
+    {
+        $data = [
+            'appName' => 'GuepardoSys Micro PHP',
+            'currentRoute' => 'frontend-demo'
+        ];
+
+        return $this->view('pages.frontend-demo', $data);
+    }
 }

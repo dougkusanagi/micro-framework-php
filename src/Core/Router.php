@@ -54,7 +54,7 @@ class Router
                 $parameters = $this->extractParameters($matches);
 
                 // Handle the request
-                return $this->handleRoute($route['handler'], $parameters, $container);
+                return $this->handleRoute($route['handler'], $request, $parameters, $container);
             }
         }
 
@@ -81,10 +81,12 @@ class Router
     /**
      * Handle route execution
      */
-    private function handleRoute(array|callable $handler, array $parameters, Container $container): mixed
+    private function handleRoute(array|callable $handler, Request $request, array $parameters, Container $container): mixed
     {
         if (is_callable($handler)) {
-            return call_user_func_array($handler, $parameters);
+            // For closures, pass Request first, then parameters
+            $args = array_merge([$request], array_values($parameters));
+            return call_user_func_array($handler, $args);
         }
 
         if (is_array($handler) && count($handler) === 2) {
@@ -101,8 +103,12 @@ class Router
                 throw new \Exception("Method {$method} not found in controller {$controllerClass}.");
             }
 
-            // Call controller method with parameters
-            return call_user_func_array([$controller, $method], $parameters);
+            // Set route parameters in Request
+            $request = $container->resolve(Request::class);
+            $request->setRouteParams($parameters);
+
+            // Call controller method with Request
+            return call_user_func_array([$controller, $method], [$request]);
         }
 
         throw new \Exception("Invalid route handler.");
@@ -150,5 +156,37 @@ class Router
     public function getRoutes(): array
     {
         return $this->routes;
+    }
+
+    /**
+     * Add a GET route
+     */
+    public function get(string $path, array|callable $handler): void
+    {
+        $this->addRoute('GET', $path, $handler);
+    }
+
+    /**
+     * Add a POST route
+     */
+    public function post(string $path, array|callable $handler): void
+    {
+        $this->addRoute('POST', $path, $handler);
+    }
+
+    /**
+     * Add a PUT route
+     */
+    public function put(string $path, array|callable $handler): void
+    {
+        $this->addRoute('PUT', $path, $handler);
+    }
+
+    /**
+     * Add a DELETE route
+     */
+    public function delete(string $path, array|callable $handler): void
+    {
+        $this->addRoute('DELETE', $path, $handler);
     }
 }

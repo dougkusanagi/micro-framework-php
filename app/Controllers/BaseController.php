@@ -68,4 +68,77 @@ abstract class BaseController
     {
         return Response::make($content, $statusCode, $headers);
     }
+
+    /**
+     * Check if user is authenticated
+     *
+     * @return bool
+     */
+    protected function isAuthenticated(): bool
+    {
+        return isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true;
+    }
+
+    /**
+     * Get authenticated user ID
+     *
+     * @return int|null
+     */
+    protected function getAuthenticatedUserId(): ?int
+    {
+        if (!$this->isAuthenticated()) {
+            return null;
+        }
+
+        return $_SESSION['user_id'] ?? null;
+    }
+
+    /**
+     * Get authenticated user
+     *
+     * @return \App\Models\User|null
+     */
+    protected function getAuthenticatedUser(): ?\App\Models\User
+    {
+        if (!$this->isAuthenticated()) {
+            return null;
+        }
+
+        $userId = $_SESSION['user_id'] ?? null;
+        if (!$userId) {
+            return null;
+        }
+
+        return \App\Models\User::find($userId);
+    }
+
+    /**
+     * Require authentication (redirect to login if not authenticated)
+     *
+     * @param string $redirectTo URL to redirect to after login
+     * @return bool True if authenticated, false if redirected
+     */
+    protected function requireAuth(string $redirectTo = null): bool
+    {
+        if (!$this->isAuthenticated()) {
+            if ($redirectTo) {
+                $_SESSION['intended'] = $redirectTo;
+            }
+
+            // For AJAX requests, return JSON
+            if (
+                isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+            ) {
+                echo json_encode(['error' => 'Authentication required', 'redirect' => '/login']);
+                exit;
+            }
+
+            // Regular redirect
+            header('Location: /login');
+            exit;
+        }
+
+        return true;
+    }
 }

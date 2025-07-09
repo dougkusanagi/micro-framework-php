@@ -1,0 +1,66 @@
+name: Quality Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: [8.3]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_mysql, dom, filter, gd, iconv, json, mbstring, pdo
+        coverage: xdebug
+    
+    - name: Cache Composer dependencies
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+    
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress --no-suggest --optimize-autoloader
+    
+    - name: Create storage directories
+      run: |
+        mkdir -p storage/cache/views
+        mkdir -p storage/cache/phpunit
+        mkdir -p storage/cache/phpstan
+        mkdir -p storage/logs
+    
+    - name: Run Tests
+      run: vendor/bin/pest --coverage --coverage-clover=coverage.xml
+    
+    - name: Run PHPStan
+      run: vendor/bin/phpstan analyse --error-format=github
+    
+    - name: Run PHP_CodeSniffer
+      run: vendor/bin/phpcs --report=checkstyle --report-file=phpcs-report.xml || true
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+    
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v3
+      with:
+        name: code-coverage-report
+        path: coverage.xml

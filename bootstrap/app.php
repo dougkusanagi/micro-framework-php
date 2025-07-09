@@ -14,9 +14,17 @@ use GuepardoSys\Core\Container;
 use GuepardoSys\Core\Dotenv;
 
 // Load environment variables
-if (file_exists(BASE_PATH . '/.env')) {
-    $dotenv = Dotenv::createImmutable(BASE_PATH);
+if (file_exists(dirname(__DIR__) . '/.env')) {
+    $dotenv = Dotenv::createImmutable(dirname(__DIR__));
     $dotenv->safeLoad();
+}
+
+// Load asset helpers
+require_once __DIR__ . '/../src/Core/assets.php';
+
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
 // Create dependency container

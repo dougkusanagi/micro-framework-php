@@ -5,9 +5,10 @@ namespace GuepardoSys\Core;
 use PDO;
 use PDOException;
 use GuepardoSys\Core\Database;
+use GuepardoSys\Core\Cache;
 
 /**
- * Base Model Class
+ * Base Model Class with query caching
  */
 abstract class BaseModel
 {
@@ -16,6 +17,8 @@ abstract class BaseModel
     protected string $primaryKey = 'id';
     protected array $fillable = [];
     protected array $attributes = [];
+    protected static ?Cache $cache = null;
+    protected int $cacheTtl = 3600; // 1 hour default
 
     public function __construct()
     {
@@ -24,6 +27,11 @@ abstract class BaseModel
         // Set table name by convention if not set
         if (!isset($this->table)) {
             $this->table = $this->getTableName();
+        }
+
+        // Initialize cache if not already done
+        if (self::$cache === null) {
+            self::$cache = new Cache();
         }
     }
 
@@ -49,7 +57,7 @@ abstract class BaseModel
     }
 
     /**
-     * Find a record by ID
+     * Find a record by ID with caching
      *
      * @param mixed $id
      * @return static|null
@@ -57,37 +65,45 @@ abstract class BaseModel
     public static function find($id): ?static
     {
         $instance = new static();
-        $stmt = $instance->db->prepare("SELECT * FROM {$instance->table} WHERE {$instance->primaryKey} = :id LIMIT 1");
-        $stmt->execute(['id' => $id]);
+        $cacheKey = "model:{$instance->table}:find:{$id}";
 
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        return self::$cache->remember($cacheKey, function () use ($instance, $id) {
+            $stmt = $instance->db->prepare("SELECT * FROM {$instance->table} WHERE {$instance->primaryKey} = :id LIMIT 1");
+            $stmt->execute(['id' => $id]);
 
-        if ($data) {
-            $instance->attributes = $data;
-            return $instance;
-        }
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return null;
+            if ($data) {
+                $instance->attributes = $data;
+                return $instance;
+            }
+
+            return null;
+        }, $instance->cacheTtl);
     }
 
     /**
-     * Get all records
+     * Get all records with caching
      *
      * @return array
      */
     public static function all(): array
     {
         $instance = new static();
-        $stmt = $instance->db->query("SELECT * FROM {$instance->table}");
-        $results = [];
+        $cacheKey = "model:{$instance->table}:all";
 
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $model = new static();
-            $model->attributes = $row;
-            $results[] = $model;
-        }
+        return self::$cache->remember($cacheKey, function () use ($instance) {
+            $stmt = $instance->db->query("SELECT * FROM {$instance->table}");
+            $results = [];
 
-        return $results;
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $model = new static();
+                $model->attributes = $row;
+                $results[] = $model;
+            }
+
+            return $results;
+        }, $instance->cacheTtl);
     }
 
     /**
@@ -144,6 +160,10 @@ abstract class BaseModel
         if ($stmt->execute($fillableData)) {
             $instance->attributes = $fillableData;
             $instance->attributes[$instance->primaryKey] = $instance->db->lastInsertId();
+
+            // Invalidate cache for this table
+            $instance->invalidateTableCache();
+
             return $instance;
         }
 
@@ -187,6 +207,8 @@ abstract class BaseModel
 
         if ($result) {
             $this->attributes = array_merge($this->attributes, $data);
+            // Invalidate cache for this table
+            $this->invalidateTableCache();
         }
 
         return $result;
@@ -206,7 +228,14 @@ abstract class BaseModel
         $sql = "DELETE FROM {$this->table} WHERE {$this->primaryKey} = :id";
         $stmt = $this->db->prepare($sql);
 
-        return $stmt->execute(['id' => $this->attributes[$this->primaryKey]]);
+        $result = $stmt->execute(['id' => $this->attributes[$this->primaryKey]]);
+
+        if ($result) {
+            // Invalidate cache for this table
+            $this->invalidateTableCache();
+        }
+
+        return $result;
     }
 
     /**
@@ -260,5 +289,47 @@ abstract class BaseModel
     public function toJson(): string
     {
         return json_encode($this->attributes);
+    }
+
+    /**
+     * Invalidate cache for this table
+     */
+    protected function invalidateTableCache(): void
+    {
+        $patterns = [
+            "model:{$this->table}:all",
+            "model:{$this->table}:find:*",
+            "model:{$this->table}:where:*"
+        ];
+
+        foreach ($patterns as $pattern) {
+            // For simple cache keys, remove directly
+            if (strpos($pattern, '*') === false) {
+                self::$cache->forget($pattern);
+            } else {
+                // For wildcard patterns, we need to flush the entire cache for simplicity
+                // In a more advanced implementation, you could track cache keys
+                self::$cache->flush();
+                break;
+            }
+        }
+    }
+
+    /**
+     * Clear model cache manually
+     */
+    public static function clearCache(): void
+    {
+        $instance = new static();
+        $instance->invalidateTableCache();
+    }
+
+    /**
+     * Set cache TTL for this model
+     */
+    public function setCacheTtl(int $ttl): static
+    {
+        $this->cacheTtl = $ttl;
+        return $this;
     }
 }

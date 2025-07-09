@@ -37,6 +37,14 @@ class Container
     }
 
     /**
+     * Bind an existing instance to the container
+     */
+    public function instance(string $abstract, mixed $instance): void
+    {
+        $this->instances[$abstract] = $instance;
+    }
+
+    /**
      * Resolve a class from the container
      */
     public function resolve(string $abstract): mixed
@@ -139,5 +147,13 @@ class Container
     public function bound(string $abstract): bool
     {
         return isset($this->bindings[$abstract]);
+    }
+
+    /**
+     * Check if a service exists in the container
+     */
+    public function has(string $abstract): bool
+    {
+        return isset($this->bindings[$abstract]) || isset($this->instances[$abstract]);
     }
 }
