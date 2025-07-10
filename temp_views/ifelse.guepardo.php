@@ -1,1 +1,0 @@
-@if($user)<p>Hello {{ $user }}</p>@else<p>Please login</p>@endif

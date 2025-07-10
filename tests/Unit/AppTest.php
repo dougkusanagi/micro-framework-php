@@ -5,34 +5,43 @@ use GuepardoSys\Core\Container;
 use GuepardoSys\Core\Router;
 use GuepardoSys\Core\Request;
 use GuepardoSys\Core\Response;
+use Tests\Helpers\TestHelpers;
 
 describe('App Core', function () {
     beforeEach(function () {
+        TestHelpers::cleanupTestEnvironment();
         $this->container = new Container();
+    });
+
+    afterEach(function () {
+        TestHelpers::cleanupTestEnvironment();
     });
 
     it('can be instantiated', function () {
         $app = new App($this->container);
         expect($app)->toBeInstanceOf(App::class);
+        expect($app->getContainer())->toBe($this->container);
     });
 
     it('can run basic request', function () {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/';
+        $_SERVER['HTTP_HOST'] = 'localhost';
+
+        $response = new Response('Hello World');
+
         $router = new Router();
-        $router->get('/', function () {
-            return new Response('Hello World');
+        $router->get('/', function () use ($response) {
+            return $response;
         });
 
         $this->container->instance(Router::class, $router);
-        $this->container->instance(Request::class, Request::createFromGlobals());
-
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        $_SERVER['REQUEST_URI'] = '/';
 
         $app = new App($this->container);
 
-        ob_start();
-        $app->run();
-        $output = ob_get_clean();
+        $output = captureOutput(function () use ($app) {
+            $app->run();
+        });
 
         expect($output)->toBe('Hello World');
     });

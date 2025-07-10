@@ -10,6 +10,7 @@
 use App\Controllers\HomeController;
 use App\Controllers\UsersController;
 use App\Controllers\SimpleAuthController;
+use App\Controllers\CacheExamplesController;
 
 return [
     ['GET', '/', [HomeController::class, 'index']],
@@ -34,9 +35,16 @@ return [
     ['POST', '/users/{id}', [UsersController::class, 'update']],
     ['GET', '/users/{id}/delete', [UsersController::class, 'delete']],
 
-    // Example route with parameter
-    // ['GET', '/user/{id}', [UserController::class, 'show']],
+    // Cache Examples routes
+    ['GET', '/cache-examples/basic', [CacheExamplesController::class, 'basicCache']],
+    ['GET', '/cache-examples/tagged', [CacheExamplesController::class, 'taggedCache']],
+    ['GET', '/cache-examples/database', [CacheExamplesController::class, 'databaseCache']],
+    ['GET', '/cache-examples/incremental', [CacheExamplesController::class, 'incrementalCache']],
+    ['GET', '/cache-examples/forever', [CacheExamplesController::class, 'foreverCache']],
+    ['GET', '/cache-examples/clear', [CacheExamplesController::class, 'clearCache']],
 
-    // Example POST route
+    // Example routes
+    // ['GET', '/user/{id}', [UserController::class, 'show']],
     // ['POST', '/contact', [ContactController::class, 'store']],
+];
 ];

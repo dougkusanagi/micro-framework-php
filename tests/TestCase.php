@@ -6,34 +6,69 @@ use PHPUnit\Framework\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected array $originalServer = [];
+    protected array $originalEnv = [];
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        // Initialize the application for testing
-        $this->initializeApplication();
+        // Backup original state
+        $this->originalServer = $_SERVER;
+        $this->originalEnv = $_ENV;
+
+        // Reset session state
+        if (session_status() !== PHP_SESSION_NONE) {
+            session_destroy();
+        }
+
+        // Initialize clean state for testing
+        $this->initializeCleanState();
     }
 
-    protected function initializeApplication(): void
+    protected function initializeCleanState(): void
     {
-        // Load environment variables for testing
-        $envPath = dirname(__DIR__);
-        $dotenv = new \GuepardoSys\Core\Dotenv($envPath);
-        $dotenv->safeLoad();
+        // Set default test environment
+        $_ENV['APP_ENV'] = 'testing';
+        $_ENV['APP_DEBUG'] = 'true';
+        $_ENV['DB_CONNECTION'] = 'sqlite';
+        $_ENV['DB_DATABASE'] = ':memory:';
 
-        // Initialize the database connection if needed
+        // Clear any existing singleton instances
+        $this->clearSingletons();
+
+        // Set minimal server variables
+        $_SERVER['HTTP_HOST'] = 'localhost';
+        $_SERVER['SERVER_NAME'] = 'localhost';
+        $_SERVER['SERVER_PORT'] = '80';
+        $_SERVER['HTTPS'] = 'off';
+        $_SERVER['REQUEST_TIME'] = time();
+    }
+
+    protected function clearSingletons(): void
+    {
+        // Reset Database singleton
         if (class_exists(\GuepardoSys\Core\Database::class)) {
-            try {
-                \GuepardoSys\Core\Database::getConnection();
-            } catch (\Exception $e) {
-                // Database connection might not be available in tests
+            $reflection = new \ReflectionClass(\GuepardoSys\Core\Database::class);
+            if ($reflection->hasProperty('connection')) {
+                $property = $reflection->getProperty('connection');
+                $property->setAccessible(true);
+                $property->setValue(null, null);
             }
         }
     }
 
     protected function tearDown(): void
     {
-        // Clean up after each test
+        // Restore original state
+        $_SERVER = $this->originalServer;
+        $_ENV = $this->originalEnv;
+
+        // Clean up session
+        if (session_status() !== PHP_SESSION_NONE) {
+            session_destroy();
+        }
+
         parent::tearDown();
     }
 

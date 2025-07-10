@@ -67,33 +67,6 @@ function config(string $key, mixed $default = null): mixed
 }
 
 /**
- * Get cache instance
- */
-if (!function_exists('cache')) {
-    function cache(?string $key = null, mixed $value = null, int $ttl = null): mixed
-    {
-        static $cache = null;
-
-        if ($cache === null) {
-            $cache = new \GuepardoSys\Core\Cache();
-        }
-
-        // If no arguments, return cache instance
-        if ($key === null) {
-            return $cache;
-        }
-
-        // If only key provided, get value
-        if ($value === null && $ttl === null) {
-            return $cache->get($key);
-        }
-
-        // If value provided, set cache
-        return $cache->put($key, $value, $ttl);
-    }
-}
-
-/**
  * Get logger instance
  */
 if (!function_exists('logger')) {
@@ -169,6 +142,81 @@ if (!function_exists('sanitize')) {
     function sanitize(array $data): array
     {
         return \GuepardoSys\Core\Security\Validator::sanitize_array($data);
+    }
+}
+
+/**
+ * Cache helpers - Similar ao Laravel
+ */
+
+/**
+ * Get value from cache
+ */
+if (!function_exists('cache')) {
+    function cache(?string $key = null, mixed $value = null, ?int $ttl = null): mixed
+    {
+        // Se não passou parâmetros, retorna uma instância da facade
+        if ($key === null) {
+            return \GuepardoSys\Core\Cache\CacheManager::getInstance();
+        }
+
+        // Se passou apenas a chave, busca o valor
+        if ($value === null && $ttl === null) {
+            return \GuepardoSys\Core\Cache\CacheFacade::get($key);
+        }
+
+        // Se passou chave e valor, armazena
+        return \GuepardoSys\Core\Cache\CacheFacade::put($key, $value, $ttl);
+    }
+}
+
+/**
+ * Cache remember helper
+ */
+if (!function_exists('cache_remember')) {
+    function cache_remember(string $key, callable $callback, ?int $ttl = null): mixed
+    {
+        return \GuepardoSys\Core\Cache\CacheFacade::remember($key, $callback, $ttl);
+    }
+}
+
+/**
+ * Cache forever helper
+ */
+if (!function_exists('cache_forever')) {
+    function cache_forever(string $key, mixed $value): bool
+    {
+        return \GuepardoSys\Core\Cache\CacheFacade::forever($key, $value);
+    }
+}
+
+/**
+ * Cache forget helper
+ */
+if (!function_exists('cache_forget')) {
+    function cache_forget(string $key): bool
+    {
+        return \GuepardoSys\Core\Cache\CacheFacade::forget($key);
+    }
+}
+
+/**
+ * Cache flush helper
+ */
+if (!function_exists('cache_flush')) {
+    function cache_flush(): bool
+    {
+        return \GuepardoSys\Core\Cache\CacheFacade::flush();
+    }
+}
+
+/**
+ * Cache with tags helper
+ */
+if (!function_exists('cache_tags')) {
+    function cache_tags(array $tags): \GuepardoSys\Core\Cache\CacheTagged
+    {
+        return \GuepardoSys\Core\Cache\CacheFacade::tags($tags);
     }
 }
 

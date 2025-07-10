@@ -14,7 +14,7 @@ class Cache
     private int $defaultTtl;
     private bool $compression;
 
-    public function __construct(string $cachePath = null, int $defaultTtl = 3600, bool $compression = true)
+    public function __construct(?string $cachePath = null, int $defaultTtl = 3600, bool $compression = true)
     {
         $this->cachePath = $cachePath ?? STORAGE_PATH . '/cache/data';
         $this->defaultTtl = $defaultTtl;
@@ -29,7 +29,7 @@ class Cache
     /**
      * Store data in cache
      */
-    public function put(string $key, mixed $value, int $ttl = null): bool
+    public function put(string $key, mixed $value, ?int $ttl = null): bool
     {
         $ttl = $ttl ?? $this->defaultTtl;
         $expiration = time() + $ttl;
@@ -130,7 +130,7 @@ class Cache
     /**
      * Get or store data using a closure
      */
-    public function remember(string $key, callable $callback, int $ttl = null): mixed
+    public function remember(string $key, callable $callback, ?int $ttl = null): mixed
     {
         $value = $this->get($key);
 

@@ -20,7 +20,7 @@ class Container
     /**
      * Bind a class or interface to the container
      */
-    public function bind(string $abstract, callable|string $concrete = null, bool $singleton = false): void
+    public function bind(string $abstract, callable|string|null $concrete = null, bool $singleton = false): void
     {
         $this->bindings[$abstract] = [
             'concrete' => $concrete ?? $abstract,
@@ -31,7 +31,7 @@ class Container
     /**
      * Bind a singleton to the container
      */
-    public function singleton(string $abstract, callable|string $concrete = null): void
+    public function singleton(string $abstract, callable|string|null $concrete = null): void
     {
         $this->bind($abstract, $concrete, true);
     }

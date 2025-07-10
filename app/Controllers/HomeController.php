@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use GuepardoSys\Core\Cache\CacheFacade;
+
 /**
  * Home Controller
  * 
@@ -32,16 +34,23 @@ class HomeController extends BaseController
     }
 
     /**
-     * Display the about page
+     * Display the about page com cache usando facade
      */
     public function about(): string
     {
-        $data = [
+        // Exemplo usando Cache Facade diretamente
+        $systemInfo = CacheFacade::remember('system.info', function () {
+            return [
+                'phpVersion' => PHP_VERSION,
+                'frameworkVersion' => '1.0.0-dev',
+                'environment' => $_ENV['APP_ENV'] ?? 'development',
+                'loadTime' => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']
+            ];
+        }, 1800); // Cache por 30 minutos
+
+        $data = array_merge([
             'appName' => 'GuepardoSys Micro PHP',
             'currentRoute' => 'about',
-            'phpVersion' => PHP_VERSION,
-            'frameworkVersion' => '1.0.0-dev',
-            'environment' => $_ENV['APP_ENV'] ?? 'development',
             'specs' => [
                 [
                     'title' => 'Performance',
@@ -60,7 +69,7 @@ class HomeController extends BaseController
                     'description' => 'Escape automático XSS, prepared statements'
                 ]
             ]
-        ];
+        ], $systemInfo);
 
         return $this->view('pages.about', $data);
     }

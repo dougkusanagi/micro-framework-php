@@ -134,7 +134,7 @@ class Request
     /**
      * Get query parameter
      */
-    public function query(string $key = null, mixed $default = null): mixed
+    public function query(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
             return $this->query;
@@ -146,7 +146,7 @@ class Request
     /**
      * Get request data
      */
-    public function input(string $key = null, mixed $default = null): mixed
+    public function input(?string $key = null, mixed $default = null): mixed
     {
         if ($key === null) {
             return $this->data;
@@ -219,7 +219,7 @@ class Request
     /**
      * Get route parameter
      */
-    public function getRouteParam(string $key, mixed $default = null): mixed
+    public function getRouteParam(?string $key = null, mixed $default = null): mixed
     {
         return $this->routeParams[$key] ?? $default;
     }
