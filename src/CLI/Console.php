@@ -23,6 +23,9 @@ use GuepardoSys\CLI\Commands\TestCommand;
 use GuepardoSys\CLI\Commands\StanCommand;
 use GuepardoSys\CLI\Commands\CsCommand;
 use GuepardoSys\CLI\Commands\QualityCommand;
+use GuepardoSys\CLI\Commands\BuildCommand;
+use GuepardoSys\CLI\Commands\DeployCommand;
+use GuepardoSys\CLI\Commands\HealthCommand;
 
 /**
  * Console Application
@@ -60,10 +63,10 @@ class Console
             'migrate:down' => MigrateDownCommand::class,
             'migrate:seed' => MigrateSeedCommand::class,
 
-            // Asset commands
-            'asset:build' => AssetCommand::class . '@build',
-            'asset:dev' => AssetCommand::class . '@dev',
-            'asset:clean' => AssetCommand::class . '@clean',
+            // Asset commands (temporariamente removidos até implementação correta)
+            // 'asset:build' => AssetCommand::class,
+            // 'asset:dev' => AssetCommand::class,
+            // 'asset:clean' => AssetCommand::class,
 
             // Cache commands
             'cache:clear' => CacheClearCommand::class,
@@ -76,6 +79,17 @@ class Console
             'stan' => StanCommand::class,
             'cs' => CsCommand::class,
             'quality' => QualityCommand::class,
+
+            // Build and deployment commands
+            'build' => BuildCommand::class,
+            'deploy' => DeployCommand::class,
+
+            // Health check command
+            'health' => HealthCommand::class,
+            'deploy' => DeployCommand::class,
+
+            // Health check command
+            'health' => HealthCommand::class,
 
             'help' => HelpCommand::class,
         ];
