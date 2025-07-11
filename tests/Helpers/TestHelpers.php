@@ -85,9 +85,18 @@ class TestHelpers
      */
     public static function cleanupTestEnvironment(): void
     {
+        // Clear output buffer first - prevent buffer issues
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+
         // Clear session data
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         if (session_status() !== PHP_SESSION_NONE) {
-            session_destroy();
+            @session_destroy();
         }
 
         // Clear superglobals
@@ -97,10 +106,10 @@ class TestHelpers
         $_COOKIE = [];
         $_SESSION = [];
 
-        // Clear output buffer
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
+        // Reset server variables to defaults
+        $_SERVER['REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $_SERVER['REQUEST_URI'] = $_SERVER['REQUEST_URI'] ?? '/';
+        $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_HOST'] ?? 'localhost';
     }
 
     /**
@@ -108,9 +117,13 @@ class TestHelpers
      */
     public static function startOutputCapture(): void
     {
-        if (!ob_get_level()) {
-            ob_start();
+        // Clear any existing buffers first
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
         }
+
+        // Start fresh buffer
+        ob_start();
     }
 
     /**
@@ -119,10 +132,11 @@ class TestHelpers
     public static function getCapturedOutput(): string
     {
         $output = '';
-        if (ob_get_level()) {
-            $output = ob_get_clean();
+        if (ob_get_level() > 0) {
+            $output = ob_get_contents();
+            ob_end_clean();
         }
-        return $output;
+        return $output ?: '';
     }
 
     /**

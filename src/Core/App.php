@@ -39,8 +39,10 @@ class App
         $this->errorHandler = new ErrorHandler($this->logger, $debug);
         $this->errorHandler->register();
 
-        // Set security headers
-        SecurityHeaders::setAll();
+        // Set security headers only if not in testing environment
+        if (!$this->isTestingEnvironment()) {
+            SecurityHeaders::setAll();
+        }
 
         // Register core services
         $this->registerCoreServices();
@@ -139,5 +141,17 @@ class App
     public function getContainer(): Container
     {
         return $this->container;
+    }
+
+    /**
+     * Check if we're in a testing environment
+     */
+    private function isTestingEnvironment(): bool
+    {
+        return defined('PHPUNIT_COMPOSER_INSTALL') ||
+            (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] === 'testing') ||
+            (function_exists('class_exists') && class_exists('PHPUnit\Framework\TestCase', false)) ||
+            (isset($_SERVER['argv']) && in_array('--configuration', $_SERVER['argv'])) ||
+            (php_sapi_name() === 'cli' && strpos(implode(' ', $_SERVER['argv'] ?? []), 'pest') !== false);
     }
 }

@@ -32,7 +32,7 @@ class Dotenv
      */
     public function load(): void
     {
-        $this->loadEnvFile();
+        $this->loadEnvFile(false);
     }
 
     /**
@@ -40,31 +40,30 @@ class Dotenv
      */
     public function safeLoad(): void
     {
-        try {
-            $this->loadEnvFile();
-        } catch (\Exception $e) {
-            // Silently ignore if .env file doesn't exist
-        }
+        $this->loadEnvFile(true);
     }
 
     /**
      * Load and parse .env file
      */
-    private function loadEnvFile(): void
+    private function loadEnvFile(bool $safe = false): void
     {
         $envFile = $this->path . '/' . $this->filename;
 
         if (!file_exists($envFile)) {
+            if ($safe) {
+                return;
+            }
             throw new \Exception("Environment file not found: {$envFile}");
         }
 
-        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES);
 
         foreach ($lines as $line) {
             $line = trim($line);
 
             // Skip comments and empty lines
-            if (empty($line) || $line[0] === '#') {
+            if (empty($line) || (strlen($line) > 0 && $line[0] === '#')) {
                 continue;
             }
 
@@ -168,13 +167,13 @@ class Dotenv
             throw new \Exception("Environment file not found: {$envFile}");
         }
 
-        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES);
 
         foreach ($lines as $line) {
             $line = trim($line);
 
             // Skip comments and empty lines
-            if (empty($line) || $line[0] === '#') {
+            if (empty($line) || (strlen($line) > 0 && $line[0] === '#')) {
                 continue;
             }
 

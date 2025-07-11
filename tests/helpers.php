@@ -57,9 +57,24 @@ if (!function_exists('mockUnauthenticated')) {
 if (!function_exists('captureOutput')) {
     function captureOutput(callable $callback): string
     {
-        TestHelpers::startOutputCapture();
-        $callback();
-        return TestHelpers::getCapturedOutput();
+        // Clear any existing output buffers
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Start new output buffer
+        ob_start();
+
+        try {
+            $callback();
+        } catch (Exception $e) {
+            ob_end_clean();
+            throw $e;
+        }
+
+        // Get and clean buffer
+        $output = ob_get_clean();
+        return $output ?: '';
     }
 }
 

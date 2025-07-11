@@ -60,9 +60,9 @@ describe('App Core', function () {
 
         $app = new App($this->container);
 
-        ob_start();
-        $app->run();
-        $output = ob_get_clean();
+        $output = captureOutput(function () use ($app) {
+            $app->run();
+        });
 
         expect($output)->toBe('User ID: 123');
     });
@@ -83,9 +83,9 @@ describe('App Core', function () {
 
         $app = new App($this->container);
 
-        ob_start();
-        $app->run();
-        $output = ob_get_clean();
+        $output = captureOutput(function () use ($app) {
+            $app->run();
+        });
 
         expect($output)->toBe('Created user: John');
 
@@ -95,7 +95,7 @@ describe('App Core', function () {
 
     it('can handle JSON responses', function () {
         $router = new Router();
-        $router->get('/api/users', function () {
+        $router->get('/api/users', function (Request $request) {
             return Response::jsonResponse(['users' => [['id' => 1, 'name' => 'John']]]);
         });
 
@@ -107,9 +107,9 @@ describe('App Core', function () {
 
         $app = new App($this->container);
 
-        ob_start();
-        $app->run();
-        $output = ob_get_clean();
+        $output = captureOutput(function () use ($app) {
+            $app->run();
+        });
 
         $data = json_decode($output, true);
         expect($data)->toBeArray();
@@ -132,15 +132,16 @@ describe('App Core', function () {
 
         // Since headers can't be tested directly, we'll test the response object
         $router->get('/redirect', function () {
-            $response = Response::redirect('/home');
+            $response = new Response();
+            $response->redirect('/home');
             expect($response->getStatusCode())->toBe(302);
             expect($response->getHeader('Location'))->toBe('/home');
             return $response;
         });
 
-        ob_start();
-        $app->run();
-        ob_get_clean();
+        $output = captureOutput(function () use ($app) {
+            $app->run();
+        });
 
         expect(true)->toBeTrue(); // Test passed if no exceptions
     });
@@ -157,9 +158,9 @@ describe('App Core', function () {
 
         $app = new App($this->container);
 
-        ob_start();
-        $app->run();
-        $output = ob_get_clean();
+        $output = captureOutput(function () use ($app) {
+            $app->run();
+        });
 
         // Should handle 404 without crashing
         expect($output)->toContain('404');
@@ -167,7 +168,7 @@ describe('App Core', function () {
 
     it('can handle exceptions', function () {
         $router = new Router();
-        $router->get('/error', function () {
+        $router->get('/error', function (Request $request) {
             throw new Exception('Test error');
         });
 
@@ -179,9 +180,9 @@ describe('App Core', function () {
 
         $app = new App($this->container);
 
-        ob_start();
-        $app->run();
-        $output = ob_get_clean();
+        $output = captureOutput(function () use ($app) {
+            $app->run();
+        });
 
         // Should handle exception gracefully
         expect($output)->toContain('error');

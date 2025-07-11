@@ -236,7 +236,8 @@ describe('AuthMiddleware', function () {
         $middleware->handle($request, $next);
 
         if (isset($_SESSION['last_activity'])) {
-            expect($_SESSION['last_activity'])->toBeCloseTo(time(), 5);
+            $timeDiff = abs($_SESSION['last_activity'] - time());
+            expect($timeDiff)->toBeLessThanOrEqual(5);
         } else {
             expect(true)->toBeTrue(); // Skip if not implemented
         }

@@ -19,13 +19,19 @@ describe('Dotenv', function () {
 
         // Clean up test files
         if (is_dir($this->testDir)) {
-            $files = glob($this->testDir . '/*');
+            $files = glob($this->testDir . '/{,.}*', GLOB_BRACE);
             foreach ($files as $file) {
                 if (is_file($file)) {
                     unlink($file);
                 }
             }
-            rmdir($this->testDir);
+            // Try to remove directory multiple times if needed
+            for ($i = 0; $i < 3; $i++) {
+                if (is_dir($this->testDir) && @rmdir($this->testDir)) {
+                    break;
+                }
+                usleep(10000); // Wait 10ms between attempts
+            }
         }
     });
 
