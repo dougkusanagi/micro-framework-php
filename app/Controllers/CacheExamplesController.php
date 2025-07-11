@@ -2,23 +2,22 @@
 
 namespace App\Controllers;
 
-use GuepardoSys\Core\Cache\CacheFacade;
-use App\Models\User;
+use GuepardoSys\Core\Cache\Cache;
 
 /**
  * Cache Examples Controller
  * 
- * Demonstra diferentes formas de usar o cache no GuepardoSys
+ * Demonstra diferentes formas de usar o cache com interface Laravel EXATA
  */
 class CacheExamplesController extends BaseController
 {
     /**
-     * Exemplo 1: Cache básico com helper
+     * Exemplo 1: Cache básico com helper (Interface Laravel EXATA)
      */
     public function basicCache(): string
     {
-        // Usando helper function - mais simples
-        $expensiveData = cache_remember('expensive.calculation', function () {
+        // Usando helper function - interface Laravel exata
+        $expensiveData = cache_remember('expensive.calculation', 300, function () {
             // Simula operação custosa
             sleep(1);
             return [
@@ -26,22 +25,21 @@ class CacheExamplesController extends BaseController
                 'calculated_at' => date('Y-m-d H:i:s'),
                 'processing_time' => '1 second'
             ];
-        }, 300); // Cache por 5 minutos
+        });
 
         return $this->view('examples.basic-cache', [
-            'title' => 'Cache Básico',
+            'title' => 'Cache Básico - Interface Laravel',
             'data' => $expensiveData
         ]);
     }
 
     /**
-     * Exemplo 2: Cache com tags (para invalidação em grupo)
+     * Exemplo 2: Cache com tags (interface Laravel EXATA)
      */
     public function taggedCache(): string
     {
-        // Cache com tags - útil para invalidar grupos relacionados
-        $userData = cache_tags(['users', 'profiles'])->remember('user.1.profile', function () {
-            // Simula busca de dados do usuário
+        // Cache com tags - exatamente como no Laravel
+        $userData = Cache::tags(['users', 'profiles'])->remember('user.1.profile', 1800, function () {
             return [
                 'id' => 1,
                 'name' => 'João Silva',
@@ -52,89 +50,91 @@ class CacheExamplesController extends BaseController
                     'language' => 'pt-BR'
                 ]
             ];
-        }, 1800); // Cache por 30 minutos
+        });
 
-        // Cache de estatísticas do usuário com mesmas tags
-        $userStats = cache_tags(['users', 'statistics'])->remember('user.1.stats', function () {
+        // Cache de estatísticas do usuário
+        $userStats = Cache::tags(['users', 'statistics'])->remember('user.1.stats', 3600, function () {
             return [
                 'total_posts' => rand(10, 100),
                 'total_comments' => rand(50, 500),
                 'reputation' => rand(100, 1000),
                 'joined_date' => '2024-01-15'
             ];
-        }, 3600); // Cache por 1 hora
+        });
 
         return $this->view('examples.tagged-cache', [
-            'title' => 'Cache com Tags',
+            'title' => 'Cache com Tags - Interface Laravel',
             'userData' => $userData,
             'userStats' => $userStats
         ]);
     }
 
     /**
-     * Exemplo 3: Cache de consultas de banco
+     * Exemplo 3: Cache de consultas de banco (interface Laravel EXATA)
      */
     public function databaseCache(): string
     {
-        // Cache de consulta de usuários mais eficiente
-        $users = CacheFacade::remember('users.all', function () {
-            // Em um cenário real, seria: User::all()
+        // Cache de consulta - interface Laravel
+        $users = Cache::remember('users.all', 600, function () {
             return [
                 ['id' => 1, 'name' => 'João', 'email' => 'joao@test.com'],
                 ['id' => 2, 'name' => 'Maria', 'email' => 'maria@test.com'],
                 ['id' => 3, 'name' => 'Pedro', 'email' => 'pedro@test.com']
             ];
-        }, 600); // Cache por 10 minutos
+        });
 
-        // Cache de contagem para dashboard
-        $userCount = CacheFacade::remember('users.count', function () {
-            // Simula: User::count()
-            return count($users ?? []);
-        }, 1800);
+        // Cache de contagem
+        $userCount = Cache::remember('users.count', 1800, function () use ($users) {
+            return count($users);
+        });
 
         return $this->view('examples.database-cache', [
-            'title' => 'Cache de Banco de Dados',
+            'title' => 'Cache de Banco - Interface Laravel',
             'users' => $users,
             'userCount' => $userCount
         ]);
     }
 
     /**
-     * Exemplo 4: Cache incremental (contadores)
+     * Exemplo 4: Cache incremental e múltiplas operações (interface Laravel EXATA)
      */
     public function incrementalCache(): string
     {
-        // Incrementa contador de visitas
-        $pageViews = CacheFacade::increment('page.views.cache-examples');
+        // Incrementa contador - interface Laravel
+        $pageViews = Cache::increment('page.views.cache-examples');
+        $apiCalls = Cache::increment('api.calls.today', 1);
 
-        // Incrementa contador de API calls
-        $apiCalls = CacheFacade::increment('api.calls.today', 1);
+        // Cache múltiplo - interface Laravel
+        Cache::putMany([
+            'last.visit.cache-examples' => date('Y-m-d H:i:s'),
+            'visitor.ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        ], 86400);
 
-        // Cache de timestamp da última visita
-        CacheFacade::put('last.visit.cache-examples', date('Y-m-d H:i:s'), 86400);
+        // Get múltiplo - interface Laravel  
+        $visitorData = Cache::many(['last.visit.cache-examples', 'visitor.ip']);
 
         return $this->view('examples.incremental-cache', [
-            'title' => 'Cache Incremental',
+            'title' => 'Cache Incremental - Interface Laravel',
             'pageViews' => $pageViews,
             'apiCalls' => $apiCalls,
-            'lastVisit' => CacheFacade::get('last.visit.cache-examples')
+            'visitorData' => $visitorData
         ]);
     }
 
     /**
-     * Exemplo 5: Cache forever (dados que raramente mudam)
+     * Exemplo 5: Cache forever (interface Laravel EXATA)
      */
     public function foreverCache(): string
     {
-        // Cache de configurações do sistema
-        $systemConfig = CacheFacade::rememberForever('system.config', function () {
+        // Cache forever - interface Laravel
+        $systemConfig = Cache::rememberForever('system.config', function () {
             return [
                 'app_name' => 'GuepardoSys Micro PHP',
                 'version' => '1.0.0-dev',
                 'supported_languages' => ['pt-BR', 'en-US', 'es-ES'],
                 'max_upload_size' => '10MB',
                 'features' => [
-                    'cache_system' => true,
+                    'laravel_cache_interface' => true,
                     'template_engine' => true,
                     'database_migrations' => true,
                     'cli_tools' => true
@@ -143,48 +143,52 @@ class CacheExamplesController extends BaseController
         });
 
         return $this->view('examples.forever-cache', [
-            'title' => 'Cache Forever',
+            'title' => 'Cache Forever - Interface Laravel',
             'config' => $systemConfig
         ]);
     }
 
     /**
-     * Limpar cache específico
+     * Limpar cache específico (interface Laravel EXATA)
      */
     public function clearCache(): string
     {
         $action = $_GET['action'] ?? 'info';
-
         $message = '';
         $success = false;
 
         switch ($action) {
             case 'users':
-                // Limpa cache com tag 'users'
-                cache_tags(['users'])->flush();
-                $message = 'Cache de usuários limpo com sucesso!';
+                // Limpa cache com tag - interface Laravel
+                Cache::tags(['users'])->flush();
+                $message = 'Cache de usuários limpo!';
                 $success = true;
                 break;
 
             case 'all':
-                // Limpa todo o cache
-                $success = cache_flush();
-                $message = $success ? 'Todo cache limpo!' : 'Erro ao limpar cache';
+                // Limpa todo cache - interface Laravel
+                $success = Cache::flush();
+                $message = $success ? 'Todo cache limpo!' : 'Erro ao limpar';
                 break;
 
             case 'expired':
-                // Limpa apenas entradas expiradas
-                $cleaned = CacheFacade::cleanExpired();
+                // Extensão: limpa expirados
+                $cleaned = Cache::cleanExpired();
                 $message = "Limpas {$cleaned} entradas expiradas";
                 $success = true;
                 break;
+
+            case 'multiple':
+                // Remove múltiplos - interface Laravel
+                $success = Cache::forgetMultiple(['test.1', 'test.2', 'test.3']);
+                $message = $success ? 'Múltiplos removidos!' : 'Erro';
+                break;
         }
 
-        // Estatísticas do cache
-        $stats = CacheFacade::stats();
+        $stats = Cache::stats();
 
         return $this->view('examples.clear-cache', [
-            'title' => 'Gerenciamento de Cache',
+            'title' => 'Gerenciamento - Interface Laravel',
             'message' => $message,
             'success' => $success,
             'stats' => $stats

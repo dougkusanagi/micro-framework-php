@@ -1,8 +1,7 @@
 <?php
 
 use GuepardoSys\Core\Cache\CacheManager;
-use GuepardoSys\Core\Cache\CacheFacade;
-use GuepardoSys\Core\Cache;
+use GuepardoSys\Core\Cache\Cache;
 
 describe('Cache Manager', function () {
     beforeEach(function () {
@@ -22,7 +21,7 @@ describe('Cache Manager', function () {
         $manager = CacheManager::getInstance();
         $store = $manager->store();
 
-        expect($store)->toBeInstanceOf(Cache::class);
+        expect($store)->toBeInstanceOf(\GuepardoSys\Core\Cache\FileStore::class);
     });
 
     it('can forward calls to default store', function () {
@@ -34,15 +33,6 @@ describe('Cache Manager', function () {
         $value = $manager->get('test.key');
         expect($value)->toBe('test value');
     });
-
-    it('can set default store', function () {
-        $manager = CacheManager::getInstance();
-        $manager->setDefaultStore('file');
-
-        // Should not throw error
-        $store = $manager->store();
-        expect($store)->toBeInstanceOf(Cache::class);
-    });
 });
 
 describe('Cache Facade', function () {
@@ -52,41 +42,41 @@ describe('Cache Facade', function () {
     });
 
     it('can put and get values', function () {
-        $result = CacheFacade::put('facade.test', 'facade value', 300);
+        $result = Cache::put('facade.test', 'facade value', 300);
         expect($result)->toBeTrue();
 
-        $value = CacheFacade::get('facade.test');
+        $value = Cache::get('facade.test');
         expect($value)->toBe('facade value');
     });
 
     it('can check if key exists', function () {
-        CacheFacade::put('exists.test', 'value', 300);
+        Cache::put('exists.test', 'value', 300);
 
-        expect(CacheFacade::has('exists.test'))->toBeTrue();
-        expect(CacheFacade::has('not.exists'))->toBeFalse();
+        expect(Cache::has('exists.test'))->toBeTrue();
+        expect(Cache::has('not.exists'))->toBeFalse();
     });
 
     it('can forget values', function () {
-        CacheFacade::put('forget.test', 'value', 300);
-        expect(CacheFacade::has('forget.test'))->toBeTrue();
+        Cache::put('forget.test', 'value', 300);
+        expect(Cache::has('forget.test'))->toBeTrue();
 
-        $result = CacheFacade::forget('forget.test');
+        $result = Cache::forget('forget.test');
         expect($result)->toBeTrue();
-        expect(CacheFacade::has('forget.test'))->toBeFalse();
+        expect(Cache::has('forget.test'))->toBeFalse();
     });
 
     it('can remember values with closure', function () {
         $callCount = 0;
 
-        $value1 = CacheFacade::remember('remember.test', function () use (&$callCount) {
+        $value1 = Cache::remember('remember.test', 300, function () use (&$callCount) {
             $callCount++;
             return 'computed value';
-        }, 300);
+        });
 
-        $value2 = CacheFacade::remember('remember.test', function () use (&$callCount) {
+        $value2 = Cache::remember('remember.test', 300, function () use (&$callCount) {
             $callCount++;
             return 'computed value';
-        }, 300);
+        });
 
         expect($value1)->toBe('computed value');
         expect($value2)->toBe('computed value');
@@ -94,62 +84,62 @@ describe('Cache Facade', function () {
     });
 
     it('can store forever', function () {
-        $result = CacheFacade::forever('forever.test', 'forever value');
+        $result = Cache::forever('forever.test', 'forever value');
         expect($result)->toBeTrue();
 
-        $value = CacheFacade::get('forever.test');
+        $value = Cache::get('forever.test');
         expect($value)->toBe('forever value');
     });
 
     it('can pull values (get and remove)', function () {
-        CacheFacade::put('pull.test', 'pull value', 300);
+        Cache::put('pull.test', 'pull value', 300);
 
-        $value = CacheFacade::pull('pull.test');
+        $value = Cache::pull('pull.test');
         expect($value)->toBe('pull value');
 
         // Deve ter sido removido
-        expect(CacheFacade::has('pull.test'))->toBeFalse();
+        expect(Cache::has('pull.test'))->toBeFalse();
     });
 
     it('can increment values', function () {
         // Primeira chamada - valor inicial 0
-        $value1 = CacheFacade::increment('counter.test');
+        $value1 = Cache::increment('counter.test');
         expect($value1)->toBe(1);
 
         // Segunda chamada - incrementa
-        $value2 = CacheFacade::increment('counter.test', 5);
+        $value2 = Cache::increment('counter.test', 5);
         expect($value2)->toBe(6);
     });
 
     it('can decrement values', function () {
-        CacheFacade::put('decrement.test', 10, 300);
+        Cache::put('decrement.test', 10, 300);
 
-        $value1 = CacheFacade::decrement('decrement.test');
+        $value1 = Cache::decrement('decrement.test');
         expect($value1)->toBe(9);
 
-        $value2 = CacheFacade::decrement('decrement.test', 3);
+        $value2 = Cache::decrement('decrement.test', 3);
         expect($value2)->toBe(6);
     });
 
     it('can flush all cache', function () {
-        CacheFacade::put('flush.test.1', 'value1', 300);
-        CacheFacade::put('flush.test.2', 'value2', 300);
+        Cache::put('flush.test.1', 'value1', 300);
+        Cache::put('flush.test.2', 'value2', 300);
 
-        expect(CacheFacade::has('flush.test.1'))->toBeTrue();
-        expect(CacheFacade::has('flush.test.2'))->toBeTrue();
+        expect(Cache::has('flush.test.1'))->toBeTrue();
+        expect(Cache::has('flush.test.2'))->toBeTrue();
 
-        $result = CacheFacade::flush();
+        $result = Cache::flush();
         expect($result)->toBeTrue();
 
-        expect(CacheFacade::has('flush.test.1'))->toBeFalse();
-        expect(CacheFacade::has('flush.test.2'))->toBeFalse();
+        expect(Cache::has('flush.test.1'))->toBeFalse();
+        expect(Cache::has('flush.test.2'))->toBeFalse();
     });
 
     it('can get cache statistics', function () {
-        CacheFacade::put('stats.test.1', 'value1', 300);
-        CacheFacade::put('stats.test.2', 'value2', 300);
+        Cache::put('stats.test.1', 'value1', 300);
+        Cache::put('stats.test.2', 'value2', 300);
 
-        $stats = CacheFacade::stats();
+        $stats = Cache::stats();
 
         expect($stats)->toBeArray();
         expect($stats)->toHaveKey('total_files');
@@ -161,7 +151,7 @@ describe('Cache Facade', function () {
     it('can remember forever', function () {
         $callCount = 0;
 
-        $value = CacheFacade::rememberForever('forever.remember', function () use (&$callCount) {
+        $value = Cache::rememberForever('forever.remember', function () use (&$callCount) {
             $callCount++;
             return 'forever computed';
         });
@@ -170,7 +160,7 @@ describe('Cache Facade', function () {
         expect($callCount)->toBe(1);
 
         // Segunda chamada não deve executar closure
-        $value2 = CacheFacade::rememberForever('forever.remember', function () use (&$callCount) {
+        $value2 = Cache::rememberForever('forever.remember', function () use (&$callCount) {
             $callCount++;
             return 'forever computed';
         });

@@ -54,6 +54,11 @@ class Container
             return $this->instances[$abstract];
         }
 
+        // Check if binding exists
+        if (!isset($this->bindings[$abstract]) && !class_exists($abstract)) {
+            throw new \Exception("Service [{$abstract}] not found in container");
+        }
+
         // Get binding or use the abstract as concrete
         $binding = $this->bindings[$abstract] ?? ['concrete' => $abstract, 'singleton' => false];
         $concrete = $binding['concrete'];

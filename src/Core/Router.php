@@ -84,8 +84,8 @@ class Router
     private function handleRoute(array|callable $handler, Request $request, array $parameters, Container $container): mixed
     {
         if (is_callable($handler)) {
-            // For closures, pass Request first, then parameters
-            $args = array_merge([$request], array_values($parameters));
+            // For closures, pass only parameters (not the Request object)
+            $args = array_values($parameters);
             return call_user_func_array($handler, $args);
         }
 

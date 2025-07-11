@@ -10,11 +10,13 @@ namespace GuepardoSys\Core;
 class Dotenv
 {
     private string $path;
+    private string $filename;
     private array $variables = [];
 
-    public function __construct(string $path)
+    public function __construct(string $path, string $filename = '.env')
     {
         $this->path = $path;
+        $this->filename = $filename;
     }
 
     /**
@@ -50,10 +52,10 @@ class Dotenv
      */
     private function loadEnvFile(): void
     {
-        $envFile = $this->path . '/.env';
+        $envFile = $this->path . '/' . $this->filename;
 
         if (!file_exists($envFile)) {
-            return;
+            throw new \Exception("Environment file not found: {$envFile}");
         }
 
         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -153,5 +155,55 @@ class Dotenv
     public function getVariable(string $key, mixed $default = null): mixed
     {
         return $this->variables[$key] ?? $default;
+    }
+
+    /**
+     * Load and override existing environment variables
+     */
+    public function overload(): void
+    {
+        $envFile = $this->path . '/' . $this->filename;
+
+        if (!file_exists($envFile)) {
+            throw new \Exception("Environment file not found: {$envFile}");
+        }
+
+        $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+
+            // Skip comments and empty lines
+            if (empty($line) || $line[0] === '#') {
+                continue;
+            }
+
+            $this->parseLineOverride($line);
+        }
+    }
+
+    /**
+     * Parse a line and override existing variables
+     */
+    private function parseLineOverride(string $line): void
+    {
+        // Split on first = character
+        $parts = explode('=', $line, 2);
+
+        if (count($parts) !== 2) {
+            return;
+        }
+
+        $key = trim($parts[0]);
+        $value = trim($parts[1]);
+
+        // Remove quotes if present
+        $value = $this->removeQuotes($value);
+
+        // Override environment variable
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
+        putenv("{$key}={$value}");
+        $this->variables[$key] = $value;
     }
 }

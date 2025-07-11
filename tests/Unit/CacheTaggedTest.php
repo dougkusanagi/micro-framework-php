@@ -1,6 +1,6 @@
 <?php
 
-use GuepardoSys\Core\Cache\CacheTagged;
+use GuepardoSys\Core\Cache\TaggedCache;
 use GuepardoSys\Core\Cache\CacheManager;
 
 describe('Cache Tagged', function () {
@@ -8,7 +8,7 @@ describe('Cache Tagged', function () {
         // Limpar cache antes de cada teste
         @array_map('unlink', glob(STORAGE_PATH . '/cache/data/*'));
         $this->manager = CacheManager::getInstance();
-        $this->tagged = new CacheTagged($this->manager, ['users', 'profiles']);
+        $this->tagged = new TaggedCache($this->manager, ['users', 'profiles']);
     });
 
     it('can store and retrieve tagged cache', function () {
@@ -22,15 +22,15 @@ describe('Cache Tagged', function () {
     it('can remember with tags', function () {
         $callCount = 0;
 
-        $value1 = $this->tagged->remember('user.profile.1', function () use (&$callCount) {
+        $value1 = $this->tagged->remember('user.profile.1', 300, function () use (&$callCount) {
             $callCount++;
             return ['id' => 1, 'name' => 'João Silva'];
-        }, 300);
+        });
 
-        $value2 = $this->tagged->remember('user.profile.1', function () use (&$callCount) {
+        $value2 = $this->tagged->remember('user.profile.1', 300, function () use (&$callCount) {
             $callCount++;
             return ['id' => 1, 'name' => 'João Silva'];
-        }, 300);
+        });
 
         expect($value1)->toBe(['id' => 1, 'name' => 'João Silva']);
         expect($value2)->toBe(['id' => 1, 'name' => 'João Silva']);
@@ -43,7 +43,7 @@ describe('Cache Tagged', function () {
         $this->tagged->put('user.2', ['name' => 'Maria'], 300);
 
         // Cache com outras tags
-        $otherTagged = new CacheTagged($this->manager, ['posts']);
+        $otherTagged = new TaggedCache($this->manager, ['posts']);
         $otherTagged->put('post.1', ['title' => 'Post 1'], 300);
 
         // Verificar que estão armazenados
@@ -64,7 +64,7 @@ describe('Cache Tagged', function () {
     });
 
     it('can handle multiple tags', function () {
-        $multiTagged = new CacheTagged($this->manager, ['users', 'admin', 'permissions']);
+        $multiTagged = new TaggedCache($this->manager, ['users', 'admin', 'permissions']);
 
         $multiTagged->put('admin.user.1', ['role' => 'admin'], 300);
         $value = $multiTagged->get('admin.user.1');

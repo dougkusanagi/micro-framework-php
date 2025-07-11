@@ -146,77 +146,80 @@ if (!function_exists('sanitize')) {
 }
 
 /**
- * Cache helpers - Similar ao Laravel
+ * Cache helpers - Interface EXATA do Laravel
  */
 
 /**
- * Get value from cache
+ * Get value from cache or cache manager instance.
  */
 if (!function_exists('cache')) {
     function cache(?string $key = null, mixed $value = null, ?int $ttl = null): mixed
     {
-        // Se não passou parâmetros, retorna uma instância da facade
+        $cache = \GuepardoSys\Core\Cache\Cache::class;
+
+        // Se não passou parâmetros, retorna o manager
         if ($key === null) {
             return \GuepardoSys\Core\Cache\CacheManager::getInstance();
         }
 
         // Se passou apenas a chave, busca o valor
         if ($value === null && $ttl === null) {
-            return \GuepardoSys\Core\Cache\CacheFacade::get($key);
+            return $cache::get($key);
         }
 
         // Se passou chave e valor, armazena
-        return \GuepardoSys\Core\Cache\CacheFacade::put($key, $value, $ttl);
+        return $cache::put($key, $value, $ttl);
     }
 }
 
 /**
- * Cache remember helper
+ * Get an item from the cache, or execute the given Closure and store the result.
+ * Interface EXATA do Laravel: remember($key, $ttl, $callback)
  */
 if (!function_exists('cache_remember')) {
-    function cache_remember(string $key, callable $callback, ?int $ttl = null): mixed
+    function cache_remember(string $key, ?int $ttl, \Closure $callback): mixed
     {
-        return \GuepardoSys\Core\Cache\CacheFacade::remember($key, $callback, $ttl);
+        return \GuepardoSys\Core\Cache\Cache::remember($key, $ttl, $callback);
     }
 }
 
 /**
- * Cache forever helper
+ * Store an item in the cache indefinitely.
  */
 if (!function_exists('cache_forever')) {
     function cache_forever(string $key, mixed $value): bool
     {
-        return \GuepardoSys\Core\Cache\CacheFacade::forever($key, $value);
+        return \GuepardoSys\Core\Cache\Cache::forever($key, $value);
     }
 }
 
 /**
- * Cache forget helper
+ * Remove an item from the cache.
  */
 if (!function_exists('cache_forget')) {
     function cache_forget(string $key): bool
     {
-        return \GuepardoSys\Core\Cache\CacheFacade::forget($key);
+        return \GuepardoSys\Core\Cache\Cache::forget($key);
     }
 }
 
 /**
- * Cache flush helper
+ * Remove all items from the cache.
  */
 if (!function_exists('cache_flush')) {
     function cache_flush(): bool
     {
-        return \GuepardoSys\Core\Cache\CacheFacade::flush();
+        return \GuepardoSys\Core\Cache\Cache::flush();
     }
 }
 
 /**
- * Cache with tags helper
+ * Begin executing a new tags operation.
  */
 if (!function_exists('cache_tags')) {
-    function cache_tags(array $tags): \GuepardoSys\Core\Cache\CacheTagged
+    function cache_tags(array $tags): \GuepardoSys\Core\Cache\TaggedCache
     {
-        return \GuepardoSys\Core\Cache\CacheFacade::tags($tags);
+        return \GuepardoSys\Core\Cache\Cache::tags($tags);
     }
 }
 

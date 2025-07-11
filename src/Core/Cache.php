@@ -2,253 +2,66 @@
 
 namespace GuepardoSys\Core;
 
-use Exception;
+use GuepardoSys\Core\Cache\CacheFacade;
 
 /**
- * Simple file-based cache system for GuepardoSys
- * Supports TTL, compression, and efficient file storage
+ * Legacy Cache class for backward compatibility
  */
 class Cache
 {
-    private string $cachePath;
-    private int $defaultTtl;
-    private bool $compression;
-
-    public function __construct(?string $cachePath = null, int $defaultTtl = 3600, bool $compression = true)
+    /**
+     * Get default cache store
+     */
+    public static function store(): CacheFacade
     {
-        $this->cachePath = $cachePath ?? STORAGE_PATH . '/cache/data';
-        $this->defaultTtl = $defaultTtl;
-        $this->compression = $compression;
-
-        // Create cache directory if it doesn't exist
-        if (!is_dir($this->cachePath)) {
-            mkdir($this->cachePath, 0755, true);
-        }
+        return new CacheFacade();
     }
 
     /**
-     * Store data in cache
+     * Put an item in the cache
      */
-    public function put(string $key, mixed $value, ?int $ttl = null): bool
+    public static function put(string $key, mixed $value, int $ttl = 3600): bool
     {
-        $ttl = $ttl ?? $this->defaultTtl;
-        $expiration = time() + $ttl;
-
-        $data = [
-            'value' => $value,
-            'expires_at' => $expiration,
-            'created_at' => time()
-        ];
-
-        $serialized = serialize($data);
-
-        // Compress if enabled and data is large enough
-        if ($this->compression && strlen($serialized) > 1024) {
-            $serialized = gzcompress($serialized, 6);
-            $isCompressed = true;
-        } else {
-            $isCompressed = false;
-        }
-
-        $cacheFile = $this->getCacheFile($key);
-
-        // Add metadata header
-        $content = json_encode(['compressed' => $isCompressed]) . "\n" . $serialized;
-
-        return file_put_contents($cacheFile, $content, LOCK_EX) !== false;
+        return CacheFacade::put($key, $value, $ttl);
     }
 
     /**
-     * Retrieve data from cache
+     * Get an item from the cache
      */
-    public function get(string $key, mixed $default = null): mixed
+    public static function get(string $key, mixed $default = null): mixed
     {
-        $cacheFile = $this->getCacheFile($key);
-
-        if (!file_exists($cacheFile)) {
-            return $default;
-        }
-
-        $content = file_get_contents($cacheFile);
-        if ($content === false) {
-            return $default;
-        }
-
-        // Parse metadata
-        $lines = explode("\n", $content, 2);
-        if (count($lines) !== 2) {
-            return $default;
-        }
-
-        $metadata = json_decode($lines[0], true);
-        $data = $lines[1];
-
-        // Decompress if needed
-        if ($metadata['compressed'] ?? false) {
-            $data = gzuncompress($data);
-            if ($data === false) {
-                return $default;
-            }
-        }
-
-        $unserialized = unserialize($data);
-        if ($unserialized === false) {
-            return $default;
-        }
-
-        // Check expiration
-        if ($unserialized['expires_at'] < time()) {
-            $this->forget($key);
-            return $default;
-        }
-
-        return $unserialized['value'];
+        return CacheFacade::get($key, $default);
     }
 
     /**
-     * Check if cache key exists and is not expired
+     * Remember an item in cache
      */
-    public function has(string $key): bool
+    public static function remember(string $key, callable $callback, int $ttl = 3600): mixed
     {
-        return $this->get($key, '__CACHE_MISS__') !== '__CACHE_MISS__';
+        return CacheFacade::remember($key, $callback, $ttl);
     }
 
     /**
-     * Remove item from cache
+     * Remove an item from cache
      */
-    public function forget(string $key): bool
+    public static function forget(string $key): bool
     {
-        $cacheFile = $this->getCacheFile($key);
-
-        if (file_exists($cacheFile)) {
-            return unlink($cacheFile);
-        }
-
-        return true;
-    }
-
-    /**
-     * Get or store data using a closure
-     */
-    public function remember(string $key, callable $callback, ?int $ttl = null): mixed
-    {
-        $value = $this->get($key);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $callback();
-        $this->put($key, $value, $ttl);
-
-        return $value;
+        return CacheFacade::forget($key);
     }
 
     /**
      * Clear all cache
      */
-    public function flush(): bool
+    public static function flush(): bool
     {
-        $files = glob($this->cachePath . '/*');
-        $success = true;
-
-        foreach ($files as $file) {
-            if (is_file($file)) {
-                $success = unlink($file) && $success;
-            }
-        }
-
-        return $success;
+        return CacheFacade::flush();
     }
 
     /**
-     * Clean expired cache entries
+     * Check if key exists
      */
-    public function cleanExpired(): int
+    public static function has(string $key): bool
     {
-        $files = glob($this->cachePath . '/*');
-        $cleaned = 0;
-
-        foreach ($files as $file) {
-            if (!is_file($file)) {
-                continue;
-            }
-
-            $content = file_get_contents($file);
-            if ($content === false) {
-                continue;
-            }
-
-            $lines = explode("\n", $content, 2);
-            if (count($lines) !== 2) {
-                continue;
-            }
-
-            $metadata = json_decode($lines[0], true);
-            $data = $lines[1];
-
-            // Decompress if needed
-            if ($metadata['compressed'] ?? false) {
-                $data = gzuncompress($data);
-                if ($data === false) {
-                    continue;
-                }
-            }
-
-            $unserialized = unserialize($data);
-            if ($unserialized === false) {
-                continue;
-            }
-
-            // Remove if expired
-            if ($unserialized['expires_at'] < time()) {
-                unlink($file);
-                $cleaned++;
-            }
-        }
-
-        return $cleaned;
-    }
-
-    /**
-     * Get cache statistics
-     */
-    public function stats(): array
-    {
-        $files = glob($this->cachePath . '/*');
-        $totalSize = 0;
-        $totalFiles = 0;
-        $expiredFiles = 0;
-
-        foreach ($files as $file) {
-            if (!is_file($file)) {
-                continue;
-            }
-
-            $totalFiles++;
-            $totalSize += filesize($file);
-
-            // Check if expired (simplified check)
-            $mtime = filemtime($file);
-            if ($mtime < time() - $this->defaultTtl) {
-                $expiredFiles++;
-            }
-        }
-
-        return [
-            'total_files' => $totalFiles,
-            'total_size' => $totalSize,
-            'expired_files' => $expiredFiles,
-            'cache_path' => $this->cachePath
-        ];
-    }
-
-    /**
-     * Generate cache file path
-     */
-    private function getCacheFile(string $key): string
-    {
-        $hash = hash('sha256', $key);
-        return $this->cachePath . '/' . $hash . '.cache';
+        return CacheFacade::has($key);
     }
 }

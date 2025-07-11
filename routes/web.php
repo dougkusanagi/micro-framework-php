@@ -47,4 +47,3 @@ return [
     // ['GET', '/user/{id}', [UserController::class, 'show']],
     // ['POST', '/contact', [ContactController::class, 'store']],
 ];
-];

@@ -2,97 +2,76 @@
 
 namespace GuepardoSys\Core\Cache;
 
+use GuepardoSys\Core\Cache\CacheManager;
+
 /**
- * Cache Facade - Interface estática para o sistema de cache
- * Similar ao Cache::get(), Cache::put() do Laravel
+ * Cache Facade
+ * 
+ * Provides a simple static interface to the cache system
  */
 class CacheFacade
 {
+    private static ?CacheManager $manager = null;
+
     /**
-     * Get cache manager instance
+     * Get the cache manager instance
      */
-    private static function manager(): CacheManager
+    private static function getManager(): CacheManager
     {
-        return CacheManager::getInstance();
+        if (self::$manager === null) {
+            self::$manager = CacheManager::getInstance();
+        }
+
+        return self::$manager;
     }
 
     /**
-     * Get value from cache
+     * Store an item in the cache
+     */
+    public static function put(string $key, mixed $value, int $ttl = 3600): bool
+    {
+        return self::getManager()->put($key, $value, $ttl);
+    }
+
+    /**
+     * Get an item from the cache
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        return self::manager()->get($key, $default);
+        return self::getManager()->get($key, $default);
     }
 
     /**
-     * Put value in cache
+     * Store an item in the cache if it doesn't exist, or return existing value
      */
-    public static function put(string $key, mixed $value, ?int $ttl = null): bool
+    public static function remember(string $key, callable $callback, int $ttl = 3600): mixed
     {
-        return self::manager()->put($key, $value, $ttl);
-    }
+        $value = self::get($key);
 
-    /**
-     * Check if cache key exists
-     */
-    public static function has(string $key): bool
-    {
-        return self::manager()->has($key);
-    }
-
-    /**
-     * Remove from cache
-     */
-    public static function forget(string $key): bool
-    {
-        return self::manager()->forget($key);
-    }
-
-    /**
-     * Get or store using closure (similar ao Laravel remember)
-     */
-    public static function remember(string $key, callable $callback, ?int $ttl = null): mixed
-    {
-        return self::manager()->remember($key, $callback, $ttl);
-    }
-
-    /**
-     * Store forever (with very long TTL)
-     */
-    public static function forever(string $key, mixed $value): bool
-    {
-        return self::manager()->put($key, $value, 86400 * 365); // 1 year
-    }
-
-    /**
-     * Get and remove from cache
-     */
-    public static function pull(string $key, mixed $default = null): mixed
-    {
-        $value = self::manager()->get($key, $default);
-        if ($value !== $default) {
-            self::manager()->forget($key);
+        if ($value !== null) {
+            return $value;
         }
+
+        $value = $callback();
+        self::put($key, $value, $ttl);
+
         return $value;
     }
 
     /**
-     * Increment cache value
+     * Store an item in the cache forever
      */
-    public static function increment(string $key, int $value = 1): int
+    public static function forever(string $key, mixed $value): bool
     {
-        $current = (int)self::manager()->get($key, 0);
-        $new = $current + $value;
-        self::manager()->put($key, $new);
-        return $new;
+        return self::getManager()->forever($key, $value);
     }
 
     /**
-     * Decrement cache value
+     * Remove an item from the cache
      */
-    public static function decrement(string $key, int $value = 1): int
+    public static function forget(string $key): bool
     {
-        return self::increment($key, -$value);
+        return self::getManager()->forget($key);
     }
 
     /**
@@ -100,46 +79,38 @@ class CacheFacade
      */
     public static function flush(): bool
     {
-        return self::manager()->flush();
+        return self::getManager()->flush();
     }
 
     /**
-     * Get cache statistics
+     * Check if an item exists in the cache
      */
-    public static function stats(): array
+    public static function has(string $key): bool
     {
-        return self::manager()->stats();
+        return self::getManager()->has($key);
     }
 
     /**
-     * Get specific store
+     * Increment a value in the cache
      */
-    public static function store(?string $name = null): CacheManager
+    public static function increment(string $key, int $value = 1): mixed
     {
-        return self::manager()->store($name);
+        return self::getManager()->increment($key, $value);
     }
 
     /**
-     * Clean expired entries
+     * Decrement a value in the cache
      */
-    public static function cleanExpired(): int
+    public static function decrement(string $key, int $value = 1): mixed
     {
-        return self::manager()->cleanExpired();
+        return self::getManager()->decrement($key, $value);
     }
 
     /**
-     * Cache for a specific duration using a closure
+     * Get cache with tags
      */
-    public static function rememberForever(string $key, callable $callback): mixed
+    public static function tags(array $tags): TaggedCache
     {
-        return self::remember($key, $callback, 86400 * 365);
-    }
-
-    /**
-     * Cache a computed value with tags (simplified version)
-     */
-    public static function tags(array $tags): CacheTagged
-    {
-        return new CacheTagged(self::manager(), $tags);
+        return self::getManager()->tags($tags);
     }
 }

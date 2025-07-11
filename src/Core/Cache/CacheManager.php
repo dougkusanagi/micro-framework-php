@@ -2,19 +2,30 @@
 
 namespace GuepardoSys\Core\Cache;
 
-use GuepardoSys\Core\Cache;
-
 /**
- * Cache Manager - Singleton para gerenciar instâncias de cache
- * Similar ao Cache Manager do Laravel
+ * Cache Manager - Interface exata do Laravel
  */
 class CacheManager
 {
     private static ?CacheManager $instance = null;
     private array $stores = [];
     private string $defaultStore = 'file';
+    private array $config = [];
 
-    private function __construct() {}
+    private function __construct()
+    {
+        $this->config = [
+            'default' => env('CACHE_DRIVER', 'file'),
+            'stores' => [
+                'file' => [
+                    'driver' => 'file',
+                    'path' => STORAGE_PATH . '/cache/data',
+                    'prefix' => env('CACHE_PREFIX', 'guepardo_cache'),
+                ],
+            ],
+            'prefix' => env('CACHE_PREFIX', 'guepardo_cache'),
+        ];
+    }
 
     /**
      * Get singleton instance
@@ -29,48 +40,63 @@ class CacheManager
     }
 
     /**
-     * Get cache store
+     * Get a cache store instance by name.
      */
-    public function store(?string $name = null): Cache
+    public function store(?string $name = null): Repository
     {
-        $name = $name ?? $this->defaultStore;
+        $name = $name ?? $this->getDefaultDriver();
 
         if (!isset($this->stores[$name])) {
-            $this->stores[$name] = $this->createStore($name);
+            $this->stores[$name] = $this->resolve($name);
         }
 
         return $this->stores[$name];
     }
 
     /**
-     * Create cache store
+     * Get the default cache driver name.
      */
-    private function createStore(string $name): Cache
+    public function getDefaultDriver(): string
     {
-        switch ($name) {
-            case 'file':
-            default:
-                $cachePath = STORAGE_PATH . '/cache/data';
-                $defaultTtl = (int)(env('CACHE_TTL', 3600));
-                $compression = (bool)(env('CACHE_COMPRESSION', true));
+        return $this->config['default'];
+    }
 
-                return new Cache($cachePath, $defaultTtl, $compression);
+    /**
+     * Set the default cache driver name.
+     */
+    public function setDefaultDriver(string $name): void
+    {
+        $this->config['default'] = $name;
+    }
+
+    /**
+     * Resolve the given store.
+     */
+    protected function resolve(string $name): Repository
+    {
+        $config = $this->config['stores'][$name] ?? [];
+
+        if (empty($config)) {
+            throw new \InvalidArgumentException("Cache store [{$name}] is not defined.");
+        }
+
+        switch ($config['driver']) {
+            case 'file':
+                return new FileStore(
+                    $config['path'] ?? null,
+                    $config['prefix'] ?? ''
+                );
+
+            default:
+                throw new \InvalidArgumentException("Driver [{$config['driver']}] is not supported.");
         }
     }
 
     /**
-     * Set default store
+     * Dynamically call the default driver instance.
      */
-    public function setDefaultStore(string $store): void
+    public function __call(string $method, array $parameters)
     {
-        $this->defaultStore = $store;
-    }
-
-    /**
-     * Forward calls to default store
-     */
-    public function __call(string $method, array $arguments)
-    {
-        return $this->store()->{$method}(...$arguments);
+        return $this->store()->$method(...$parameters);
     }
 }

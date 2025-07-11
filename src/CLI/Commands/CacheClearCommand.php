@@ -2,7 +2,7 @@
 
 namespace GuepardoSys\CLI\Commands;
 
-use GuepardoSys\Core\Cache;
+use GuepardoSys\Core\Cache\Cache;
 use GuepardoSys\Core\View\View;
 
 /**
@@ -23,7 +23,7 @@ class CacheClearCommand extends BaseCommand
         echo "- View cache: {$viewCleared} files cleared" . PHP_EOL;
 
         // Clear data cache
-        $dataCache = new Cache();
+        Cache::flush();
         $dataCache->flush();
         echo '- Data cache: cleared' . PHP_EOL;
 
