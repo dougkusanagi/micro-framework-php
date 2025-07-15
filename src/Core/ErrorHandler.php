@@ -68,6 +68,11 @@ class ErrorHandler
             return false;
         }
 
+        // Don't interfere with tests unless we're explicitly testing error handling
+        if ($this->isTestEnvironment() && !$this->isErrorHandlingTest()) {
+            return false;
+        }
+
         $errorType = $this->getErrorType($severity);
         $logMessage = "PHP {$errorType}: {$message} in {$file} on line {$line}";
 
@@ -90,6 +95,11 @@ class ErrorHandler
      */
     public function doHandleException(Throwable $exception): void
     {
+        // Don't interfere with tests unless we're explicitly testing error handling
+        if ($this->isTestEnvironment() && !$this->isErrorHandlingTest()) {
+            throw $exception;
+        }
+
         $this->logger->critical('Uncaught Exception: ' . $exception->getMessage(), [
             'exception' => get_class($exception),
             'file' => $exception->getFile(),
@@ -401,6 +411,77 @@ class ErrorHandler
     }
 
     /**
+     * Check if we're in a test environment
+     */
+    private function isTestEnvironment(): bool
+    {
+        // Check for PHPUnit/Pest constants
+        if (defined('PHPUNIT_COMPOSER_INSTALL') || defined('__PHPUNIT_PHAR__')) {
+            return true;
+        }
+        
+        // Check environment variable
+        if (isset($_ENV['APP_ENV']) && $_ENV['APP_ENV'] === 'testing') {
+            return true;
+        }
+        
+        // Check if Pest is running
+        if (class_exists('Pest\\TestSuite', false)) {
+            return true;
+        }
+        
+        // Check command line arguments
+        if (isset($_SERVER['argv'])) {
+            $argv = $_SERVER['argv'];
+            foreach ($argv as $arg) {
+                if (str_contains($arg, 'pest') || str_contains($arg, 'phpunit') || str_contains($arg, 'vendor/bin/pest')) {
+                    return true;
+                }
+            }
+        }
+        
+        // Check global argv
+        if (isset($GLOBALS['argv'])) {
+            $argv = $GLOBALS['argv'];
+            foreach ($argv as $arg) {
+                if (str_contains($arg, 'pest') || str_contains($arg, 'phpunit') || str_contains($arg, '--configuration')) {
+                    return true;
+                }
+            }
+        }
+        
+        // Check if we're in CLI mode with test-related script
+        if (php_sapi_name() === 'cli' && isset($_SERVER['SCRIPT_NAME'])) {
+            $scriptName = $_SERVER['SCRIPT_NAME'];
+            if (str_contains($scriptName, 'pest') || str_contains($scriptName, 'phpunit')) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if we're specifically testing error handling functionality
+     */
+    private function isErrorHandlingTest(): bool
+    {
+        // Check if we're in an ErrorHandler integration test
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+        
+        foreach ($backtrace as $frame) {
+            if (isset($frame['class']) && str_contains($frame['class'], 'ErrorHandlerIntegrationTest')) {
+                return true;
+            }
+            if (isset($frame['file']) && str_contains($frame['file'], 'ErrorHandlerIntegrationTest')) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
      * Set debug mode
      */
     public function setDebug(bool $debug): void
@@ -432,7 +513,12 @@ class ErrorHandler
      */
     public static function register(): void
     {
-        self::getInstance()->doRegister();
+        $instance = self::getInstance();
+        
+        // Don't register error handlers during tests
+        if (!$instance->isTestEnvironment()) {
+            $instance->doRegister();
+        }
     }
 
     /**

@@ -100,7 +100,10 @@ describe('App Core', function () {
         });
 
         $this->container->instance(Router::class, $router);
-        $this->container->instance(Request::class, Request::createFromGlobals());
+        
+        // Create a proper request object with the right parameters
+        $request = new Request('GET', '/api/users');
+        $this->container->instance(Request::class, $request);
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/api/users';

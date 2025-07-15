@@ -3,36 +3,38 @@
 use GuepardoSys\Core\Migration;
 use GuepardoSys\Core\Database;
 
-describe('Migration', function () {
-    beforeEach(function () {
-        // Set up SQLite in-memory database
-        $_ENV['DB_CONNECTION'] = 'sqlite';
-        $_ENV['DB_DATABASE'] = ':memory:';
-        $reflection = new ReflectionClass(Database::class);
-        $property = $reflection->getProperty('connection');
-        $property->setAccessible(true);
-        $property->setValue(null, null);
+beforeEach(function () {
+    // Set up SQLite in-memory database
+    $_ENV['DB_CONNECTION'] = 'sqlite';
+    $_ENV['DB_DATABASE'] = ':memory:';
+    $reflection = new ReflectionClass(Database::class);
+    $property = $reflection->getProperty('connection');
+    $property->setAccessible(true);
+    $property->setValue(null, null);
 
-        $this->migration = new Migration();
-        $this->testMigrationsDir = __DIR__ . '/../../temp_migrations';
+    $this->migration = new Migration();
+    $this->testMigrationsDir = __DIR__ . '/../../temp_migrations';
 
-        if (!is_dir($this->testMigrationsDir)) {
-            mkdir($this->testMigrationsDir, 0755, true);
-        }
-    });
+    if (!is_dir($this->testMigrationsDir)) {
+        mkdir($this->testMigrationsDir, 0755, true);
+    }
+});
 
-    afterEach(function () {
-        // Clean up test migration files
-        if (is_dir($this->testMigrationsDir)) {
-            $files = glob($this->testMigrationsDir . '/*');
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    unlink($file);
-                }
+afterEach(function () {
+    // Clean up test migration files
+    $testMigrationsDir = $this->testMigrationsDir ?? __DIR__ . '/../../temp_migrations';
+    if (is_dir($testMigrationsDir)) {
+        $files = glob($testMigrationsDir . '/*');
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                unlink($file);
             }
-            rmdir($this->testMigrationsDir);
         }
-    });
+        rmdir($testMigrationsDir);
+    }
+});
+
+describe('Migration', function () {
 
     it('can create migrations table', function () {
         $this->migration->createMigrationsTable();

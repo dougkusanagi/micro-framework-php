@@ -2,7 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 use GuepardoSys\Core\Debug\ErrorTypeHandler;
-use PDOException;
 
 class ErrorTypeHandlerTest extends TestCase
 {
