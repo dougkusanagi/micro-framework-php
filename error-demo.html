@@ -1,0 +1,956 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>InvalidArgumentException - Debug Console</title><style>
+/* Modern CSS Reset */
+*, *::before, *::after {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+/* CSS Custom Properties */
+:root {
+/* Light theme */
+--bg-primary: #ffffff;
+--bg-secondary: #f8fafc;
+--bg-tertiary: #f1f5f9;
+--bg-accent: #e2e8f0;
+--text-primary: #1e293b;
+--text-secondary: #64748b;
+--text-muted: #94a3b8;
+--border-color: #e2e8f0;
+--border-hover: #cbd5e1;
+--accent-color: #3b82f6;
+--accent-hover: #2563eb;
+--error-color: #ef4444;
+--error-bg: #fef2f2;
+--success-color: #10b981;
+--success-bg: #f0fdf4;
+--warning-color: #f59e0b;
+--warning-bg: #fffbeb;
+--code-bg: #f8fafc;
+--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+--shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+--radius-sm: 4px;
+--radius: 6px;
+--radius-lg: 8px;
+--radius-xl: 12px;
+}
+/* Dark theme */
+@media (prefers-color-scheme: dark) {
+:root {
+--bg-primary: #0f172a;
+--bg-secondary: #1e293b;
+--bg-tertiary: #334155;
+--bg-accent: #475569;
+--text-primary: #f1f5f9;
+--text-secondary: #cbd5e1;
+--text-muted: #94a3b8;
+--border-color: #334155;
+--border-hover: #475569;
+--code-bg: #1e293b;
+--error-bg: #1f1315;
+--success-bg: #0f1f13;
+--warning-bg: #1f1b0f;
+}
+}
+/* Base Styles */
+html {
+scroll-behavior: smooth;
+font-size: 16px;
+}
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+background: var(--bg-primary);
+color: var(--text-primary);
+line-height: 1.6;
+font-size: 14px;
+min-height: 100vh;
+}
+/* Header Styles */
+.error-header {
+background: linear-gradient(135deg, var(--error-color) 0%, #dc2626 50%, #b91c1c 100%);
+color: white;
+padding: 3rem 2rem;
+text-align: center;
+position: relative;
+overflow: hidden;
+box-shadow: var(--shadow-xl);
+}
+.error-header::before {
+content: '';
+position: absolute;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+opacity: 0.3;
+}
+.error-header-content {
+position: relative;
+z-index: 1;
+max-width: 1000px;
+margin: 0 auto;
+}
+.error-title {
+font-size: clamp(2rem, 5vw, 3rem);
+font-weight: 800;
+margin-bottom: 1rem;
+text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+letter-spacing: -0.025em;
+}
+.error-message {
+font-size: clamp(1.1rem, 3vw, 1.5rem);
+opacity: 0.95;
+margin-bottom: 1.5rem;
+font-weight: 500;
+line-height: 1.4;
+}
+.error-location {
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+background: rgba(255, 255, 255, 0.15);
+padding: 0.75rem 1.5rem;
+border-radius: var(--radius-lg);
+font-size: 1rem;
+font-weight: 500;
+backdrop-filter: blur(10px);
+border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.error-location-icon {
+font-size: 1.2rem;
+}
+/* Navigation Bar */
+.nav-bar {
+background: var(--bg-secondary);
+border-bottom: 1px solid var(--border-color);
+padding: 1rem 0;
+position: sticky;
+top: 0;
+z-index: 100;
+backdrop-filter: blur(10px);
+box-shadow: var(--shadow-sm);
+}
+.nav-container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 0 2rem;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 1rem;
+}
+.nav-search {
+flex: 1;
+max-width: 400px;
+position: relative;
+}
+.search-input {
+width: 100%;
+padding: 0.75rem 1rem 0.75rem 2.5rem;
+border: 1px solid var(--border-color);
+border-radius: var(--radius-lg);
+background: var(--bg-primary);
+color: var(--text-primary);
+font-size: 14px;
+outline: none;
+transition: all 0.2s ease;
+}
+.search-input:focus {
+border-color: var(--accent-color);
+box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.search-icon {
+position: absolute;
+left: 0.75rem;
+top: 50%;
+transform: translateY(-50%);
+color: var(--text-muted);
+font-size: 1rem;
+}
+.nav-actions {
+display: flex;
+align-items: center;
+gap: 0.75rem;
+}
+.theme-toggle {
+padding: 0.5rem;
+border: 1px solid var(--border-color);
+border-radius: var(--radius);
+background: var(--bg-primary);
+color: var(--text-secondary);
+cursor: pointer;
+transition: all 0.2s ease;
+font-size: 1.1rem;
+}
+.theme-toggle:hover {
+background: var(--bg-tertiary);
+border-color: var(--border-hover);
+}
+/* Container and Layout */
+.container {
+max-width: 1200px;
+margin: 0 auto;
+padding: 2rem;
+}
+.main-grid {
+display: grid;
+grid-template-columns: 1fr;
+gap: 2rem;
+}
+@media (min-width: 1024px) {
+.main-grid {
+grid-template-columns: 2fr 1fr;
+}
+}
+.main-content {
+display: flex;
+flex-direction: column;
+gap: 1.5rem;
+}
+.sidebar {
+display: flex;
+flex-direction: column;
+gap: 1.5rem;
+}
+/* Card Styles */
+.card {
+background: var(--bg-secondary);
+border: 1px solid var(--border-color);
+border-radius: var(--radius-lg);
+box-shadow: var(--shadow);
+overflow: hidden;
+transition: all 0.2s ease;
+}
+.card:hover {
+box-shadow: var(--shadow-lg);
+border-color: var(--border-hover);
+}
+.card-header {
+background: var(--bg-tertiary);
+padding: 1rem 1.5rem;
+border-bottom: 1px solid var(--border-color);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: space-between;
+transition: all 0.2s ease;
+user-select: none;
+}
+.card-header:hover {
+background: var(--bg-accent);
+}
+.card-title {
+font-size: 1.1rem;
+font-weight: 600;
+display: flex;
+align-items: center;
+gap: 0.75rem;
+color: var(--text-primary);
+}
+.card-icon {
+font-size: 1.3rem;
+opacity: 0.8;
+}
+.card-toggle {
+width: 24px;
+height: 24px;
+border-radius: 50%;
+background: var(--accent-color);
+color: white;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+font-weight: 600;
+transition: all 0.3s ease;
+cursor: pointer;
+}
+.card.collapsed .card-toggle {
+transform: rotate(-90deg);
+background: var(--text-muted);
+}
+.card-content {
+padding: 1.5rem;
+display: block;
+transition: all 0.3s ease;
+}
+.card.collapsed .card-content {
+display: none;
+}
+/* Code Block Styles */
+.code-block {
+background: var(--code-bg);
+border: 1px solid var(--border-color);
+border-radius: var(--radius-lg);
+overflow: hidden;
+font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;
+font-size: 13px;
+line-height: 1.5;
+box-shadow: var(--shadow-sm);
+}
+.code-header {
+background: var(--bg-tertiary);
+padding: 0.75rem 1rem;
+border-bottom: 1px solid var(--border-color);
+display: flex;
+align-items: center;
+justify-content: space-between;
+font-size: 12px;
+color: var(--text-secondary);
+font-weight: 500;
+}
+.code-title {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+.code-actions {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+}
+.code-content {
+overflow-x: auto;
+max-height: 500px;
+overflow-y: auto;
+background: var(--code-bg);
+}
+.code-line {
+display: flex;
+align-items: flex-start;
+padding: 0.25rem 0;
+min-height: 24px;
+transition: background-color 0.15s ease;
+}
+.code-line:hover {
+background: rgba(59, 130, 246, 0.05);
+}
+.code-line.error-line {
+background: rgba(239, 68, 68, 0.1);
+border-left: 4px solid var(--error-color);
+padding-left: calc(1rem - 4px);
+}
+.line-number {
+color: var(--text-muted);
+width: 60px;
+text-align: right;
+padding: 0 1rem;
+user-select: none;
+flex-shrink: 0;
+font-weight: 500;
+}
+.line-content {
+flex: 1;
+white-space: pre;
+overflow-x: auto;
+padding-right: 1rem;
+}
+/* Syntax Highlighting */
+.php-keyword { color: #8b5cf6; font-weight: 600; }
+.php-string { color: #10b981; }
+.php-comment { color: var(--text-muted); font-style: italic; }
+.php-variable { color: #3b82f6; }
+.php-function { color: #f59e0b; font-weight: 500; }
+.php-class { color: #ec4899; font-weight: 500; }
+.php-number { color: #06b6d4; }
+.php-operator { color: var(--text-secondary); }
+/* Button Styles */
+.btn {
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+padding: 0.5rem 1rem;
+border: 1px solid var(--border-color);
+border-radius: var(--radius);
+background: var(--bg-primary);
+color: var(--text-primary);
+text-decoration: none;
+font-size: 13px;
+font-weight: 500;
+cursor: pointer;
+transition: all 0.2s ease;
+white-space: nowrap;
+}
+.btn:hover {
+background: var(--bg-tertiary);
+border-color: var(--accent-color);
+transform: translateY(-1px);
+box-shadow: var(--shadow);
+}
+.btn:active {
+transform: translateY(0);
+}
+.btn-primary {
+background: var(--accent-color);
+color: white;
+border-color: var(--accent-color);
+}
+.btn-primary:hover {
+background: var(--accent-hover);
+border-color: var(--accent-hover);
+}
+.btn-success {
+background: var(--success-color);
+color: white;
+border-color: var(--success-color);
+}
+.btn-icon {
+padding: 0.5rem;
+min-width: auto;
+}
+/* Stack Trace Styles */
+.stack-frame {
+border: 1px solid var(--border-color);
+border-radius: var(--radius);
+margin-bottom: 0.75rem;
+overflow: hidden;
+background: var(--bg-primary);
+transition: all 0.2s ease;
+}
+.stack-frame:hover {
+border-color: var(--border-hover);
+box-shadow: var(--shadow-sm);
+}
+.stack-frame-header {
+padding: 1rem;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: space-between;
+transition: all 0.2s ease;
+background: var(--bg-secondary);
+}
+.stack-frame-header:hover {
+background: var(--bg-tertiary);
+}
+.stack-frame.vendor .stack-frame-header {
+opacity: 0.7;
+}
+.stack-frame-info {
+display: flex;
+flex-direction: column;
+gap: 0.25rem;
+flex: 1;
+}
+.stack-frame-function {
+font-weight: 600;
+color: var(--accent-color);
+font-size: 15px;
+}
+.stack-frame-location {
+font-size: 13px;
+color: var(--text-secondary);
+font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;
+}
+.stack-frame-content {
+display: none;
+padding: 1rem;
+background: var(--bg-secondary);
+border-top: 1px solid var(--border-color);
+}
+.stack-frame.expanded .stack-frame-content {
+display: block;
+}
+/* Context Styles */
+.context-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+gap: 1rem;
+}
+.context-item {
+background: var(--code-bg);
+border: 1px solid var(--border-color);
+border-radius: var(--radius);
+overflow: hidden;
+box-shadow: var(--shadow-sm);
+}
+.context-item-header {
+background: var(--bg-tertiary);
+padding: 0.75rem 1rem;
+font-weight: 600;
+font-size: 13px;
+border-bottom: 1px solid var(--border-color);
+color: var(--text-primary);
+}
+.context-item-content {
+padding: 1rem;
+max-height: 250px;
+overflow-y: auto;
+font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace;
+font-size: 12px;
+line-height: 1.4;
+color: var(--text-secondary);
+}
+/* Copy Feedback */
+.copy-feedback {
+position: fixed;
+top: 2rem;
+right: 2rem;
+background: var(--success-color);
+color: white;
+padding: 1rem 1.5rem;
+border-radius: var(--radius-lg);
+font-size: 14px;
+font-weight: 500;
+transform: translateX(calc(100% + 2rem));
+transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+z-index: 1000;
+box-shadow: var(--shadow-xl);
+display: flex;
+align-items: center;
+gap: 0.75rem;
+max-width: calc(100vw - 4rem);
+}
+.copy-feedback.show {
+transform: translateX(0);
+}
+.copy-feedback-icon {
+font-size: 1.2rem;
+}
+/* Search Results */
+.search-results {
+margin-top: 0.5rem;
+font-size: 12px;
+color: var(--text-secondary);
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+.search-nav {
+display: flex;
+gap: 0.25rem;
+}
+.search-nav-btn {
+padding: 0.25rem 0.5rem;
+font-size: 11px;
+border: 1px solid var(--border-color);
+background: var(--bg-primary);
+color: var(--text-primary);
+border-radius: var(--radius-sm);
+cursor: pointer;
+transition: all 0.2s ease;
+}
+.search-nav-btn:hover:not(:disabled) {
+background: var(--bg-tertiary);
+border-color: var(--accent-color);
+}
+.search-nav-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+.search-highlight {
+background: rgba(59, 130, 246, 0.3) !important;
+border-radius: 2px;
+padding: 1px 2px;
+}
+/* Suggestions */
+.suggestions-list {
+display: flex;
+flex-direction: column;
+gap: 1rem;
+}
+.suggestion-item {
+padding: 1rem;
+background: var(--bg-primary);
+border: 1px solid var(--border-color);
+border-radius: var(--radius);
+border-left: 4px solid var(--accent-color);
+}
+.suggestion-title {
+font-weight: 600;
+color: var(--text-primary);
+margin-bottom: 0.5rem;
+}
+.suggestion-description {
+color: var(--text-secondary);
+font-size: 13px;
+line-height: 1.5;
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+.container {
+padding: 1rem;
+}
+.error-header {
+padding: 2rem 1rem;
+}
+.nav-container {
+padding: 0 1rem;
+flex-direction: column;
+gap: 1rem;
+}
+.nav-search {
+max-width: none;
+}
+.context-grid {
+grid-template-columns: 1fr;
+}
+.card-header {
+padding: 0.75rem 1rem;
+}
+.card-content {
+padding: 1rem;
+}
+.copy-feedback {
+top: 1rem;
+right: 1rem;
+left: 1rem;
+max-width: none;
+transform: translateY(-100%);
+}
+.copy-feedback.show {
+transform: translateY(0);
+}
+}
+/* Utility Classes */
+.text-muted { color: var(--text-muted); }
+.text-error { color: var(--error-color); }
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.font-mono { font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', monospace; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.hidden { display: none; }
+/* Loading Animation */
+@keyframes spin {
+to { transform: rotate(360deg); }
+}
+.loading {
+animation: spin 1s linear infinite;
+}
+/* Fade In Animation */
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+animation: fadeIn 0.3s ease-out;
+}
+</style></head><body><div class="copy-feedback" id="copy-feedback"><span class="copy-feedback-icon">✅</span><span id="copy-feedback-text">Copied to clipboard!</span></div><div class="error-header"><div class="error-header-content"><h1 class="error-title">InvalidArgumentException</h1><p class="error-message">Invalid user data provided. The email format is incorrect and the password does not meet security requirements. Please ensure the email follows the format user@domain.com and the password contains at least 8 characters with uppercase, lowercase, numbers, and special characters.</p><div class="error-location"><span class="error-location-icon">📍</span><span><strong>\demo-error-template.php</strong> at line <strong>63</strong></span></div></div></div><div class="nav-bar"><div class="nav-container"><div class="nav-search"><div style="position: relative;"><span class="search-icon">🔍</span><input type="text" class="search-input" id="search-input" placeholder="Search in code sections... (Ctrl+F)" /></div><div class="search-results" id="search-results" style="display: none;"><span id="search-count"></span><div class="search-nav" id="search-nav"><button class="search-nav-btn" id="search-prev" onclick="navigateSearch(-1)">↑</button><button class="search-nav-btn" id="search-next" onclick="navigateSearch(1)">↓</button><button class="search-nav-btn" onclick="clearSearch()">✕</button></div></div></div><div class="nav-actions"><button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌓</button><button class="btn btn-primary" onclick="expandAll()">Expand All</button><button class="btn" onclick="collapseAll()">Collapse All</button></div></div></div><div class="container"><div class="main-grid"><div class="main-content"><div class="card fade-in" id="source-section"><div class="card-header" onclick="toggleCard('source-section')"><div class="card-title"><span class="card-icon">📄</span>
+Source Code
+</div><div class="card-toggle">▼</div></div><div class="card-content"><div class="code-block"><div class="code-header"><div class="code-title"><span>📁</span><span>\demo-error-template.php</span></div><div class="code-actions"><button class="btn btn-icon" onclick="copyCode('source-code')" title="Copy code">
+📋
+</button></div></div><div class="code-content" id="source-code"><div class="code-line "><span class="line-number">48</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">49</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Create a complex stack trace</span></code></pre></span></div><div class="code-line "><span class="line-number">50</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction1</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">51</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction2</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">52</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">53</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">54</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction2</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">55</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction3</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">56</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">57</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">58</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction3</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">59</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Simulate some processing</span></code></pre></span></div><div class="code-line "><span class="line-number">60</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $processedData </span><span class="php-string">= </span><span class="php-keyword">array_merge</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">, [</span><span class="php-html">'processed' </span><span class="php-string">=&gt; </span><span class="php-keyword">true</span><span class="php-string">]);</span></code></pre></span></div><div class="code-line "><span class="line-number">61</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">62</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// This will cause an error</span></code></pre></span></div><div class="code-line error-line"><span class="line-number">63</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">throw new </span><span class="php-keyword">InvalidArgumentException</span><span class="php-string">(</span></code></pre></span></div><div class="code-line "><span class="line-number">64</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'Invalid user data provided. The email format is incorrect and the password does not meet security requirements. ' </span><span class="php-string">.</span></code></pre></span></div><div class="code-line "><span class="line-number">65</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'Please ensure the email follows the format user@domain.com and the password contains at least 8 characters with uppercase, lowercase, numbers, and special characters.'</span></code></pre></span></div><div class="code-line "><span class="line-number">66</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">67</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">68</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">69</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">validateUserData</span><span class="php-string">(</span><span class="php-keyword">$userData</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">70</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Add some context</span></code></pre></span></div><div class="code-line "><span class="line-number">71</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $validationRules </span><span class="php-string">= [</span></code></pre></span></div><div class="code-line "><span class="line-number">72</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'username' </span><span class="php-string">=&gt; </span><span class="php-html">'required|min:3|max:50'</span><span class="php-string">,</span></code></pre></span></div><div class="code-line "><span class="line-number">73</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'email' </span><span class="php-string">=&gt; </span><span class="php-html">'required|email'</span><span class="php-string">,</span></code></pre></span></div><div class="code-line "><span class="line-number">74</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'password' </span><span class="php-string">=&gt; </span><span class="php-html">'required|min:8|complex'</span></code></pre></span></div><div class="code-line "><span class="line-number">75</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">];</span></code></pre></span></div><div class="code-line "><span class="line-number">76</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">77</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction1</span><span class="php-string">(</span><span class="php-keyword">$userData</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">78</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div></div></div></div></div><div class="card fade-in" id="stack-section"><div class="card-header" onclick="toggleCard('stack-section')"><div class="card-title"><span class="card-icon">📚</span>
+Stack Trace
+</div><div class="card-toggle">▼</div></div><div class="card-content"><div class="stack-frame " id="frame-0"><div class="stack-frame-header" onclick="toggleStackFrame(0)"><div class="stack-frame-info"><div class="stack-frame-function">
+deepFunction3()
+</div><div class="stack-frame-location">
+\demo-error-template.php:55 </div></div><div class="card-toggle">▼</div></div><div class="stack-frame-content"><div class="code-block"><div class="code-header"><div class="code-title"><span>📄</span><span>\demo-error-template.php</span></div><div class="code-actions"><button class="btn btn-icon" onclick="copyCode('frame-0-code')" title="Copy code">
+📋
+</button></div></div><div class="code-content" id="frame-0-code"><div class="code-line "><span class="line-number">50</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction1</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">51</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction2</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">52</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">53</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">54</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction2</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line error-line"><span class="line-number">55</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction3</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">56</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">57</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">58</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction3</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">59</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Simulate some processing</span></code></pre></span></div><div class="code-line "><span class="line-number">60</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $processedData </span><span class="php-string">= </span><span class="php-keyword">array_merge</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">, [</span><span class="php-html">'processed' </span><span class="php-string">=&gt; </span><span class="php-keyword">true</span><span class="php-string">]);</span></code></pre></span></div></div></div></div></div><div class="stack-frame " id="frame-1"><div class="stack-frame-header" onclick="toggleStackFrame(1)"><div class="stack-frame-info"><div class="stack-frame-function">
+deepFunction2()
+</div><div class="stack-frame-location">
+\demo-error-template.php:51 </div></div><div class="card-toggle">▼</div></div><div class="stack-frame-content"><div class="code-block"><div class="code-header"><div class="code-title"><span>📄</span><span>\demo-error-template.php</span></div><div class="code-actions"><button class="btn btn-icon" onclick="copyCode('frame-1-code')" title="Copy code">
+📋
+</button></div></div><div class="code-content" id="frame-1-code"><div class="code-line "><span class="line-number">46</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'api_secret' </span><span class="php-string">=&gt; </span><span class="php-html">'hidden_api_secret'</span></code></pre></span></div><div class="code-line "><span class="line-number">47</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">];</span></code></pre></span></div><div class="code-line "><span class="line-number">48</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">49</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Create a complex stack trace</span></code></pre></span></div><div class="code-line "><span class="line-number">50</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction1</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line error-line"><span class="line-number">51</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction2</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">52</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">53</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">54</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">deepFunction2</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">55</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction3</span><span class="php-string">(</span><span class="php-keyword">$data</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">56</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div></div></div></div></div><div class="stack-frame " id="frame-2"><div class="stack-frame-header" onclick="toggleStackFrame(2)"><div class="stack-frame-info"><div class="stack-frame-function">
+deepFunction1()
+</div><div class="stack-frame-location">
+\demo-error-template.php:77 </div></div><div class="card-toggle">▼</div></div><div class="stack-frame-content"><div class="code-block"><div class="code-header"><div class="code-title"><span>📄</span><span>\demo-error-template.php</span></div><div class="code-actions"><button class="btn btn-icon" onclick="copyCode('frame-2-code')" title="Copy code">
+📋
+</button></div></div><div class="code-content" id="frame-2-code"><div class="code-line "><span class="line-number">72</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'username' </span><span class="php-string">=&gt; </span><span class="php-html">'required|min:3|max:50'</span><span class="php-string">,</span></code></pre></span></div><div class="code-line "><span class="line-number">73</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'email' </span><span class="php-string">=&gt; </span><span class="php-html">'required|email'</span><span class="php-string">,</span></code></pre></span></div><div class="code-line "><span class="line-number">74</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-html">'password' </span><span class="php-string">=&gt; </span><span class="php-html">'required|min:8|complex'</span></code></pre></span></div><div class="code-line "><span class="line-number">75</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">];</span></code></pre></span></div><div class="code-line "><span class="line-number">76</span><span class="line-content"></span></div><div class="code-line error-line"><span class="line-number">77</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">deepFunction1</span><span class="php-string">(</span><span class="php-keyword">$userData</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">78</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">79</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">80</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">createUser</span><span class="php-string">(</span><span class="php-keyword">$userData</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">81</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Simulate user creation process</span></code></pre></span></div><div class="code-line "><span class="line-number">82</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $userData</span><span class="php-string">[</span><span class="php-html">'id'</span><span class="php-string">] = </span><span class="php-keyword">rand</span><span class="php-string">(</span><span class="php-keyword">1000</span><span class="php-string">, </span><span class="php-keyword">9999</span><span class="php-string">);</span></code></pre></span></div></div></div></div></div><div class="stack-frame " id="frame-3"><div class="stack-frame-header" onclick="toggleStackFrame(3)"><div class="stack-frame-info"><div class="stack-frame-function">
+validateUserData()
+</div><div class="stack-frame-location">
+\demo-error-template.php:85 </div></div><div class="card-toggle">▼</div></div><div class="stack-frame-content"><div class="code-block"><div class="code-header"><div class="code-title"><span>📄</span><span>\demo-error-template.php</span></div><div class="code-actions"><button class="btn btn-icon" onclick="copyCode('frame-3-code')" title="Copy code">
+📋
+</button></div></div><div class="code-content" id="frame-3-code"><div class="code-line "><span class="line-number">80</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">function </span><span class="php-keyword">createUser</span><span class="php-string">(</span><span class="php-keyword">$userData</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">81</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Simulate user creation process</span></code></pre></span></div><div class="code-line "><span class="line-number">82</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $userData</span><span class="php-string">[</span><span class="php-html">'id'</span><span class="php-string">] = </span><span class="php-keyword">rand</span><span class="php-string">(</span><span class="php-keyword">1000</span><span class="php-string">, </span><span class="php-keyword">9999</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">83</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $userData</span><span class="php-string">[</span><span class="php-html">'created_at'</span><span class="php-string">] = </span><span class="php-keyword">date</span><span class="php-string">(</span><span class="php-html">'Y-m-d H:i:s'</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">84</span><span class="line-content"></span></div><div class="code-line error-line"><span class="line-number">85</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">validateUserData</span><span class="php-string">(</span><span class="php-keyword">$userData</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">86</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">87</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">88</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">try {</span></code></pre></span></div><div class="code-line "><span class="line-number">89</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Trigger the error</span></code></pre></span></div><div class="code-line "><span class="line-number">90</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $result </span><span class="php-string">= </span><span class="php-keyword">createUser</span><span class="php-string">(</span><span class="php-keyword">$_POST</span><span class="php-string">);</span></code></pre></span></div></div></div></div></div><div class="stack-frame " id="frame-4"><div class="stack-frame-header" onclick="toggleStackFrame(4)"><div class="stack-frame-info"><div class="stack-frame-function">
+createUser()
+</div><div class="stack-frame-location">
+\demo-error-template.php:90 </div></div><div class="card-toggle">▼</div></div><div class="stack-frame-content"><div class="code-block"><div class="code-header"><div class="code-title"><span>📄</span><span>\demo-error-template.php</span></div><div class="code-actions"><button class="btn btn-icon" onclick="copyCode('frame-4-code')" title="Copy code">
+📋
+</button></div></div><div class="code-content" id="frame-4-code"><div class="code-line "><span class="line-number">85</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">return </span><span class="php-keyword">validateUserData</span><span class="php-string">(</span><span class="php-keyword">$userData</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">86</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">}</span></code></pre></span></div><div class="code-line "><span class="line-number">87</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">88</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">try {</span></code></pre></span></div><div class="code-line "><span class="line-number">89</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Trigger the error</span></code></pre></span></div><div class="code-line error-line"><span class="line-number">90</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $result </span><span class="php-string">= </span><span class="php-keyword">createUser</span><span class="php-string">(</span><span class="php-keyword">$_POST</span><span class="php-string">);</span></code></pre></span></div><div class="code-line "><span class="line-number">91</span><span class="line-content"></span></div><div class="code-line "><span class="line-number">92</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-string">} catch (</span><span class="php-keyword">Exception $e</span><span class="php-string">) {</span></code></pre></span></div><div class="code-line "><span class="line-number">93</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php </span><span class="php-comment">// Create the renderer</span></code></pre></span></div><div class="code-line "><span class="line-number">94</span><span class="line-content"><pre><code class="php-default"><span class="php-keyword">&lt;?php $renderer </span><span class="php-string">= new </span><span class="php-keyword">AdvancedErrorRenderer</span><span class="php-string">();</span></code></pre></span></div><div class="code-line "><span class="line-number">95</span><span class="line-content"></span></div></div></div></div></div></div></div><div class="card fade-in" id="context-section"><div class="card-header" onclick="toggleCard('context-section')"><div class="card-title"><span class="card-icon">🔍</span>
+Context Information
+</div><div class="card-toggle">▼</div></div><div class="card-content"><div class="context-grid"><div class="context-item"><div class="context-item-header">
+Request_id </div><div class="context-item-content"><pre>&quot;req_6875d8f76a92c&quot;</pre></div></div><div class="context-item"><div class="context-item-header">
+User_session </div><div class="context-item-content"><pre>{
+&quot;user_id&quot;: 12345,
+&quot;role&quot;: &quot;admin&quot;,
+&quot;permissions&quot;: [
+&quot;read&quot;,
+&quot;write&quot;,
+&quot;delete&quot;
+],
+&quot;last_activity&quot;: &quot;2025-07-15 04:23:39&quot;
+}</pre></div></div><div class="context-item"><div class="context-item-header">
+Application_state </div><div class="context-item-content"><pre>{
+&quot;version&quot;: &quot;2.1.0&quot;,
+&quot;environment&quot;: &quot;development&quot;,
+&quot;debug_mode&quot;: true,
+&quot;memory_usage&quot;: 4194304,
+&quot;peak_memory&quot;: 4194304
+}</pre></div></div><div class="context-item"><div class="context-item-header">
+Database_info </div><div class="context-item-content"><pre>{
+&quot;connection_status&quot;: &quot;connected&quot;,
+&quot;active_queries&quot;: 3,
+&quot;last_query&quot;: &quot;SELECT * FROM users WHERE email = ?&quot;,
+&quot;query_time&quot;: &quot;0.045ms&quot;
+}</pre></div></div><div class="context-item"><div class="context-item-header">
+Request </div><div class="context-item-content"><pre>{
+&quot;method&quot;: &quot;POST&quot;,
+&quot;url&quot;: &quot;http://localhost:8000/api/users/create?debug=1&amp;amp;amp;token=%5BHIDDEN%5D&quot;,
+&quot;headers&quot;: {
+&quot;Host&quot;: &quot;localhost:8000&quot;,
+&quot;User-Agent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36&quot;
+},
+&quot;get&quot;: {
+&quot;page&quot;: &quot;1&quot;,
+&quot;limit&quot;: &quot;10&quot;,
+&quot;search&quot;: &quot;user query&quot;,
+&quot;sort&quot;: &quot;created_at&quot;,
+&quot;debug&quot;: &quot;1&quot;,
+&quot;token&quot;: &quot;de***********23&quot;,
+&quot;api_secret&quot;: &quot;hi*************et&quot;
+},
+&quot;post&quot;: {
+&quot;username&quot;: &quot;john_doe&quot;,
+&quot;email&quot;: &quot;john@example.com&quot;,
+&quot;password&quot;: &quot;su*********************23&quot;,
+&quot;api_key&quot;: &quot;sk*******************************ef&quot;,
+&quot;credit_card&quot;: &quot;4111-1111-1111-1111&quot;,
+&quot;phone&quot;: &quot;+1-555-123-4567&quot;,
+&quot;address&quot;: &quot;123 Main St, City, State&quot;,
+&quot;preferences&quot;: {
+&quot;theme&quot;: &quot;dark&quot;,
+&quot;notifications&quot;: true,
+&quot;privacy_level&quot;: &quot;high&quot;
+}
+},
+&quot;files&quot;: []
+}</pre></div></div><div class="context-item"><div class="context-item-header">
+Server </div><div class="context-item-content"><pre>{
+&quot;DOCUMENT_ROOT&quot;: &quot;&quot;,
+&quot;SCRIPT_NAME&quot;: &quot;demo-error-template.php&quot;,
+&quot;SCRIPT_FILENAME&quot;: &quot;demo-error-template.php&quot;,
+&quot;REQUEST_TIME&quot;: 1752553719,
+&quot;REQUEST_TIME_FLOAT&quot;: 1752553719.41045,
+&quot;HTTP_HOST&quot;: &quot;localhost:8000&quot;,
+&quot;HTTP_USER_AGENT&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36&quot;,
+&quot;PHP_SELF&quot;: &quot;demo-error-template.php&quot;
+}</pre></div></div><div class="context-item"><div class="context-item-header">
+Environment </div><div class="context-item-content"><pre>{
+&quot;PHP_VERSION&quot;: &quot;8.4.10&quot;,
+&quot;PHP_OS&quot;: &quot;WINNT&quot;,
+&quot;PHP_SAPI&quot;: &quot;cli&quot;
+}</pre></div></div></div></div></div></div><div class="sidebar"><div class="card fade-in" id="suggestions-section"><div class="card-header" onclick="toggleCard('suggestions-section')"><div class="card-title"><span class="card-icon">💡</span>
+Suggestions
+</div><div class="card-toggle">▼</div></div><div class="card-content"><div class="suggestions-list"><div class="suggestion-item"><div class="suggestion-title">Suggestion</div><div class="suggestion-description"></div></div><div class="suggestion-item"><div class="suggestion-title">Suggestion</div><div class="suggestion-description"></div></div></div></div></div><div class="card fade-in" id="actions-section"><div class="card-header" onclick="toggleCard('actions-section')"><div class="card-title"><span class="card-icon">⚡</span>
+Quick Actions
+</div><div class="card-toggle">▼</div></div><div class="card-content"><div style="display: flex; flex-direction: column; gap: 0.75rem;"><button class="btn btn-primary" onclick="copyErrorInfo()">
+📋 Copy Error Info
+</button><button class="btn" onclick="copyStackTrace()">
+📚 Copy Stack Trace
+</button><button class="btn" onclick="window.location.reload()">
+🔄 Refresh Page
+</button><button class="btn" onclick="toggleAllCode()">
+👁️ Toggle All Code
+</button></div></div></div><div class="card fade-in" id="details-section"><div class="card-header" onclick="toggleCard('details-section')"><div class="card-title"><span class="card-icon">ℹ️</span>
+Error Details
+</div><div class="card-toggle">▼</div></div><div class="card-content"><div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 13px;"><div><strong>Type:</strong><span class="text-error">InvalidArgumentException</span></div><div><strong>Code:</strong><span class="font-mono">0</span></div><div><strong>File:</strong><span class="font-mono text-muted">\demo-error-template.php</span></div><div><strong>Line:</strong><span class="font-mono">63</span></div><div><strong>Time:</strong><span class="text-muted">2025-07-15 04:28:39</span></div></div></div></div></div></div></div><script>
+// Global state
+let searchMatches = [];
+let currentSearchIndex = -1;
+let isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+initializeSearch();
+initializeKeyboardShortcuts();
+initializeTheme();
+});
+// Card toggle functionality
+function toggleCard(cardId) {
+const card = document.getElementById(cardId);
+if (card) {
+card.classList.toggle('collapsed');
+}
+}
+// Stack frame toggle
+function toggleStackFrame(index) {
+const frame = document.getElementById(`frame-${index}`);
+if (frame) {
+frame.classList.toggle('expanded');
+}
+}
+// Expand/Collapse all cards
+function expandAll() {
+document.querySelectorAll('.card.collapsed').forEach(card => {
+card.classList.remove('collapsed');
+});
+}
+function collapseAll() {
+document.querySelectorAll('.card:not(.collapsed)').forEach(card => {
+card.classList.add('collapsed');
+});
+}
+// Copy functionality
+async function copyCode(elementId) {
+const element = document.getElementById(elementId);
+if (!element) return;
+const lines = element.querySelectorAll('.line-content');
+const text = Array.from(lines).map(line => line.textContent).join('\n');
+try {
+await navigator.clipboard.writeText(text);
+showCopyFeedback('Code copied to clipboard!');
+} catch (err) {
+// Fallback for older browsers
+const textArea = document.createElement('textarea');
+textArea.value = text;
+document.body.appendChild(textArea);
+textArea.select();
+document.execCommand('copy');
+document.body.removeChild(textArea);
+showCopyFeedback('Code copied to clipboard!');
+}
+}
+async function copyErrorInfo() {
+const errorInfo = `Error: InvalidArgumentExceptionMessage: Invalid user data provided. The email format is incorrect and the password does not meet security requirements. Please ensure the email follows the format user@domain.com and the password contains at least 8 characters with uppercase, lowercase, numbers, and special characters.File: C:\Users\dl_ag\Herd\micro-framework-php\demo-error-template.phpLine: 63Time: ${new Date().toISOString()}`;
+try {
+await navigator.clipboard.writeText(errorInfo);
+showCopyFeedback('Error info copied to clipboard!');
+} catch (err) {
+console.error('Failed to copy error info:', err);
+}
+}
+async function copyStackTrace() {
+const stackFrames = document.querySelectorAll('.stack-frame-function, .stack-frame-location');
+const stackText = Array.from(stackFrames).map(el => el.textContent).join('\n');
+try {
+await navigator.clipboard.writeText(stackText);
+showCopyFeedback('Stack trace copied to clipboard!');
+} catch (err) {
+console.error('Failed to copy stack trace:', err);
+}
+}
+function showCopyFeedback(message) {
+const feedback = document.getElementById('copy-feedback');
+const text = document.getElementById('copy-feedback-text');
+text.textContent = message;
+feedback.classList.add('show');
+setTimeout(() => {
+feedback.classList.remove('show');
+}, 3000);
+}
+// Search functionality
+function initializeSearch() {
+const searchInput = document.getElementById('search-input');
+searchInput.addEventListener('input', performSearch);
+}
+function performSearch() {
+const query = document.getElementById('search-input').value.toLowerCase();
+const resultsDiv = document.getElementById('search-results');
+const countSpan = document.getElementById('search-count');
+// Clear previous highlights
+clearSearch();
+if (query.length < 2) {
+resultsDiv.style.display = 'none';
+return;
+}
+// Search in code content
+const codeElements = document.querySelectorAll('.line-content, .context-item-content');
+searchMatches = [];
+codeElements.forEach((element, index) => {
+const text = element.textContent.toLowerCase();
+if (text.includes(query)) {
+searchMatches.push(element);
+highlightText(element, query);
+}
+});
+// Update UI
+if (searchMatches.length > 0) {
+countSpan.textContent = `${searchMatches.length} matches found`;
+resultsDiv.style.display = 'flex';
+currentSearchIndex = 0;
+scrollToMatch(0);
+} else {
+countSpan.textContent = 'No matches found';
+resultsDiv.style.display = 'flex';
+}
+}
+function highlightText(element, query) {
+const text = element.innerHTML;
+const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
+element.innerHTML = text.replace(regex, '<span class="search-highlight">$1</span>');
+}
+function escapeRegex(string) {
+return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+function navigateSearch(direction) {
+if (searchMatches.length === 0) return;
+currentSearchIndex += direction;
+if (currentSearchIndex >= searchMatches.length) currentSearchIndex = 0;
+if (currentSearchIndex < 0) currentSearchIndex = searchMatches.length - 1;
+scrollToMatch(currentSearchIndex);
+}
+function scrollToMatch(index) {
+if (searchMatches[index]) {
+searchMatches[index].scrollIntoView({
+behavior: 'smooth',
+block: 'center'
+});
+// Update navigation buttons
+const prevBtn = document.getElementById('search-prev');
+const nextBtn = document.getElementById('search-next');
+prevBtn.disabled = searchMatches.length <= 1;
+nextBtn.disabled = searchMatches.length <= 1;
+}
+}
+function clearSearch() {
+document.querySelectorAll('.search-highlight').forEach(el => {
+el.outerHTML = el.innerHTML;
+});
+document.getElementById('search-results').style.display = 'none';
+document.getElementById('search-input').value = '';
+searchMatches = [];
+currentSearchIndex = -1;
+}
+// Theme toggle
+function toggleTheme() {
+isDarkMode = !isDarkMode;
+document.documentElement.style.colorScheme = isDarkMode ? 'dark' : 'light';
+localStorage.setItem('debug-theme', isDarkMode ? 'dark' : 'light');
+}
+function initializeTheme() {
+const savedTheme = localStorage.getItem('debug-theme');
+if (savedTheme) {
+isDarkMode = savedTheme === 'dark';
+document.documentElement.style.colorScheme = isDarkMode ? 'dark' : 'light';
+}
+}
+// Keyboard shortcuts
+function initializeKeyboardShortcuts() {
+document.addEventListener('keydown', function(e) {
+// Ctrl+F for search
+if (e.ctrlKey && e.key === 'f') {
+e.preventDefault();
+document.getElementById('search-input').focus();
+}
+// Escape to clear search
+if (e.key === 'Escape') {
+clearSearch();
+}
+// Arrow keys for search navigation
+if (searchMatches.length > 0) {
+if (e.key === 'ArrowDown' && e.ctrlKey) {
+e.preventDefault();
+navigateSearch(1);
+}
+if (e.key === 'ArrowUp' && e.ctrlKey) {
+e.preventDefault();
+navigateSearch(-1);
+}
+}
+});
+}
+// Toggle all code sections
+function toggleAllCode() {
+const codeContents = document.querySelectorAll('.code-content');
+const isAnyHidden = Array.from(codeContents).some(el => el.style.display === 'none');
+codeContents.forEach(content => {
+content.style.display = isAnyHidden ? 'block' : 'none';
+});
+}
+</script></body></html>
