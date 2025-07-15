@@ -18,6 +18,8 @@ class HomeController extends BaseController
     {
         $data = [
             'appName' => 'GuepardoSys Micro PHP',
+            'title' => 'GuepardoSys Micro PHP',
+            'version' => '1.0.0-dev',
             'currentRoute' => 'home',
             'message' => 'Tudo funcionando',
             'showFeatures' => true,

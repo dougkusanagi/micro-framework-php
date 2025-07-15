@@ -6,6 +6,8 @@ use Exception;
 use Throwable;
 use GuepardoSys\Core\Logger;
 use GuepardoSys\Core\Security\SecurityHeaders;
+use GuepardoSys\Core\Debug\AdvancedErrorRenderer;
+use GuepardoSys\Core\Debug\ErrorRendererInterface;
 
 /**
  * Global Error Handler
@@ -16,6 +18,7 @@ class ErrorHandler
     private Logger $logger;
     private bool $debug;
     private array $errorPages = [];
+    private ?ErrorRendererInterface $advancedRenderer = null;
 
     /**
      * Static instance for backwards compatibility
@@ -26,6 +29,24 @@ class ErrorHandler
     {
         $this->logger = $logger ?? new Logger();
         $this->debug = $debug;
+        
+        // Initialize advanced renderer when debug mode is enabled
+        if ($this->debug) {
+            $this->initializeAdvancedRenderer();
+        }
+    }
+
+    /**
+     * Initialize the advanced error renderer
+     */
+    private function initializeAdvancedRenderer(): void
+    {
+        try {
+            $this->advancedRenderer = new AdvancedErrorRenderer();
+        } catch (Exception $e) {
+            // If advanced renderer fails to initialize, fall back to basic rendering
+            $this->advancedRenderer = null;
+        }
     }
 
     /**
@@ -185,12 +206,67 @@ class ErrorHandler
      */
     private function displayError(string $type, string $message, string $file, int $line): void
     {
-        echo "<div style=\"background: #fff; border-left: 4px solid #dc3545; padding: 20px; margin: 10px; font-family: monospace;\">
-            <h3 style=\"color: #dc3545; margin: 0 0 10px 0;\">{$type}</h3>
-            <p style=\"margin: 0 0 10px 0;\"><strong>Message:</strong> {$message}</p>
-            <p style=\"margin: 0 0 10px 0;\"><strong>File:</strong> {$file}</p>
-            <p style=\"margin: 0;\"><strong>Line:</strong> {$line}</p>
-        </div>";
+        // Clear any existing output buffer to prevent mixing with HTML
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Set appropriate headers
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: text/html; charset=UTF-8');
+            SecurityHeaders::setAll();
+        }
+
+        // Use advanced renderer if available
+        if ($this->advancedRenderer !== null) {
+            try {
+                echo $this->advancedRenderer->renderError($type, $message, $file, $line);
+                exit(1);
+            } catch (Exception $e) {
+                // Fall back to basic rendering if advanced renderer fails
+            }
+        }
+
+        // Fallback to basic error display with full page layout
+        echo "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>{$type} - GuepardoSys Debug</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #333; }
+        .error-container { max-width: 1200px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .error-header { background: #dc3545; color: white; padding: 20px; }
+        .error-header h1 { margin: 0; font-size: 1.5rem; }
+        .error-content { padding: 20px; }
+        .error-message { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .error-details { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; }
+        .error-details strong { color: #495057; }
+        .back-link { display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; padding: 8px 16px; border: 1px solid #007bff; border-radius: 4px; }
+        .back-link:hover { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <div class=\"error-container\">
+        <div class=\"error-header\">
+            <h1>🐛 {$type}</h1>
+        </div>
+        <div class=\"error-content\">
+            <div class=\"error-message\">
+                <strong>Error Message:</strong> " . htmlspecialchars($message) . "
+            </div>
+            <div class=\"error-details\">
+                <p><strong>File:</strong> " . htmlspecialchars($file) . "</p>
+                <p><strong>Line:</strong> {$line}</p>
+            </div>
+            <a href=\"/\" class=\"back-link\">← Go back to homepage</a>
+        </div>
+    </div>
+</body>
+</html>";
+        exit(1);
     }
 
     /**
@@ -198,16 +274,78 @@ class ErrorHandler
      */
     private function displayException(Throwable $exception): void
     {
-        echo "<div style=\"background: #fff; border-left: 4px solid #dc3545; padding: 20px; margin: 10px; font-family: monospace;\">
-            <h3 style=\"color: #dc3545; margin: 0 0 10px 0;\">Uncaught " . get_class($exception) . "</h3>
-            <p style=\"margin: 0 0 10px 0;\"><strong>Message:</strong> " . htmlspecialchars($exception->getMessage()) . "</p>
-            <p style=\"margin: 0 0 10px 0;\"><strong>File:</strong> " . htmlspecialchars($exception->getFile()) . "</p>
-            <p style=\"margin: 0 0 10px 0;\"><strong>Line:</strong> " . $exception->getLine() . "</p>
-            <details style=\"margin-top: 10px;\">
-                <summary style=\"cursor: pointer; color: #007bff;\">Stack Trace</summary>
-                <pre style=\"background: #f8f9fa; padding: 10px; margin: 10px 0; overflow-x: auto;\">" . htmlspecialchars($exception->getTraceAsString()) . "</pre>
-            </details>
-        </div>";
+        // Clear any existing output buffer to prevent mixing with HTML
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        // Set appropriate headers
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: text/html; charset=UTF-8');
+            SecurityHeaders::setAll();
+        }
+
+        // Use advanced renderer if available
+        if ($this->advancedRenderer !== null) {
+            try {
+                echo $this->advancedRenderer->render($exception);
+                exit(1);
+            } catch (Exception $e) {
+                // Fall back to basic rendering if advanced renderer fails
+            }
+        }
+
+        // Fallback to basic exception display with full page layout
+        $exceptionClass = get_class($exception);
+        echo "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+    <meta charset=\"UTF-8\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <title>Uncaught {$exceptionClass} - GuepardoSys Debug</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #333; }
+        .error-container { max-width: 1200px; margin: 0 auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .error-header { background: #dc3545; color: white; padding: 20px; }
+        .error-header h1 { margin: 0; font-size: 1.5rem; }
+        .error-content { padding: 20px; }
+        .error-message { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .error-details { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 4px; font-family: 'Courier New', monospace; margin-bottom: 20px; }
+        .error-details strong { color: #495057; }
+        .stack-trace { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; overflow: hidden; }
+        .stack-trace summary { background: #e9ecef; padding: 15px; cursor: pointer; font-weight: bold; color: #495057; }
+        .stack-trace summary:hover { background: #dee2e6; }
+        .stack-trace pre { margin: 0; padding: 15px; overflow-x: auto; font-size: 0.9rem; line-height: 1.4; }
+        .back-link { display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; padding: 8px 16px; border: 1px solid #007bff; border-radius: 4px; }
+        .back-link:hover { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <div class=\"error-container\">
+        <div class=\"error-header\">
+            <h1>💥 Uncaught {$exceptionClass}</h1>
+        </div>
+        <div class=\"error-content\">
+            <div class=\"error-message\">
+                <strong>Exception Message:</strong> " . htmlspecialchars($exception->getMessage()) . "
+            </div>
+            <div class=\"error-details\">
+                <p><strong>File:</strong> " . htmlspecialchars($exception->getFile()) . "</p>
+                <p><strong>Line:</strong> " . $exception->getLine() . "</p>
+            </div>
+            <div class=\"stack-trace\">
+                <details>
+                    <summary>📋 Stack Trace</summary>
+                    <pre>" . htmlspecialchars($exception->getTraceAsString()) . "</pre>
+                </details>
+            </div>
+            <a href=\"/\" class=\"back-link\">← Go back to homepage</a>
+        </div>
+    </div>
+</body>
+</html>";
+        exit(1);
     }
 
     /**
@@ -268,6 +406,13 @@ class ErrorHandler
     public function setDebug(bool $debug): void
     {
         $this->debug = $debug;
+        
+        // Initialize or clear advanced renderer based on debug mode
+        if ($this->debug) {
+            $this->initializeAdvancedRenderer();
+        } else {
+            $this->advancedRenderer = null;
+        }
     }
 
     /**
@@ -276,7 +421,8 @@ class ErrorHandler
     private static function getInstance(): ErrorHandler
     {
         if (self::$instance === null) {
-            self::$instance = new self();
+            $debug = (bool)($_ENV['APP_DEBUG'] ?? false);
+            self::$instance = new self(null, $debug);
         }
         return self::$instance;
     }
