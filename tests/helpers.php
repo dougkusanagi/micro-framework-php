@@ -61,13 +61,14 @@ if (!function_exists('captureOutput')) {
         ob_start();
         try {
             $callback();
+            $output = ob_get_contents();
+            return $output ?: '';
         } finally {
             // Clean up only buffers we opened
             while (ob_get_level() > $level) {
                 ob_end_clean();
             }
         }
-        return ob_get_clean();
     }
 }
 

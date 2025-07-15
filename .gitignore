@@ -40,6 +40,10 @@ composer.phar
 /coverage/
 /.phpunit.result.cache
 
+# Test logs
+/tests/storage/logs/*
+!/tests/storage/logs/.gitkeep
+
 # Build files
 /build/
 /dist/

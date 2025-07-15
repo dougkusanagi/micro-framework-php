@@ -36,6 +36,10 @@ describe('App Core', function () {
         });
 
         $this->container->instance(Router::class, $router);
+        
+        // Create a proper request object
+        $request = new Request('GET', '/');
+        $this->container->instance(Request::class, $request);
 
         $app = new App($this->container);
 
@@ -176,7 +180,10 @@ describe('App Core', function () {
         });
 
         $this->container->instance(Router::class, $router);
-        $this->container->instance(Request::class, Request::createFromGlobals());
+        
+        // Create a proper request object with the right parameters
+        $request = new Request('GET', '/error');
+        $this->container->instance(Request::class, $request);
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['REQUEST_URI'] = '/error';
@@ -188,7 +195,7 @@ describe('App Core', function () {
         });
 
         // Should handle exception gracefully
-        expect($output)->toContain('Exception Message:');
+        expect($output)->toContain('Test error');
     });
 
     it('can handle middleware if implemented', function () {
