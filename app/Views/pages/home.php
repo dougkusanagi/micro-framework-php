@@ -8,7 +8,7 @@ ob_start();
 </div>
 
 <div class="hero">
-    <h1><?= htmlspecialchars($title) ?></h1>
+    <h1><?= $title ?? 'Título' ?></h1>
     <p>Version <?= htmlspecialchars($version) ?> - Built for shared hosting environments</p>
     <a href="/about" class="btn">Learn More</a>
 </div>
