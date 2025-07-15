@@ -217,8 +217,10 @@ class ErrorHandler
     private function displayError(string $type, string $message, string $file, int $line): void
     {
         // Clear any existing output buffer to prevent mixing with HTML
-        while (ob_get_level()) {
-            ob_end_clean();
+        if (!$this->isTestEnvironment()) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
         }
 
         // Set appropriate headers
@@ -285,8 +287,10 @@ class ErrorHandler
     private function displayException(Throwable $exception): void
     {
         // Clear any existing output buffer to prevent mixing with HTML
-        while (ob_get_level()) {
-            ob_end_clean();
+        if (!$this->isTestEnvironment()) {
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
         }
 
         // Set appropriate headers

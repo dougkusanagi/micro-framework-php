@@ -188,7 +188,7 @@ describe('App Core', function () {
         });
 
         // Should handle exception gracefully
-        expect($output)->toContain('error');
+        expect($output)->toContain('Exception Message:');
     });
 
     it('can handle middleware if implemented', function () {
