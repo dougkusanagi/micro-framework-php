@@ -22,7 +22,7 @@ class ErrorHandler
      */
     private static ?ErrorHandler $instance = null;
 
-    public function __construct(Logger $logger = null, bool $debug = false)
+    public function __construct(?Logger $logger = null, bool $debug = false)
     {
         $this->logger = $logger ?? new Logger();
         $this->debug = $debug;
@@ -227,11 +227,16 @@ class ErrorHandler
             E_USER_ERROR => 'User Error',
             E_USER_WARNING => 'User Warning',
             E_USER_NOTICE => 'User Notice',
-            E_STRICT => 'Strict Standards',
             E_RECOVERABLE_ERROR => 'Recoverable Error',
             E_DEPRECATED => 'Deprecated',
             E_USER_DEPRECATED => 'User Deprecated'
         ];
+
+        // Add E_STRICT only if it's defined (deprecated in PHP 8.0+)
+        // Use numeric value to avoid referencing the deprecated constant
+        if (defined('E_STRICT')) {
+            $types[2048] = 'Strict Standards'; // E_STRICT = 2048
+        }
 
         return $types[$type] ?? 'Unknown Error';
     }

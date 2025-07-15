@@ -19,6 +19,7 @@ class HomeController extends BaseController
         $data = [
             'appName' => 'GuepardoSys Micro PHP',
             'currentRoute' => 'home',
+            'message' => 'Tudo funcionando',
             'showFeatures' => true,
             'features' => [
                 '✅ Arquitetura MVC',
