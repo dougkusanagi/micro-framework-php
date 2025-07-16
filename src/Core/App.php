@@ -37,7 +37,11 @@ class App
         // Initialize error handler
         $debug = (bool)($_ENV['APP_DEBUG'] ?? false);
         $this->errorHandler = new ErrorHandler($this->logger, $debug);
-        $this->errorHandler->register();
+        
+        // Only register error handler if not in testing environment
+        if (!$this->isTestingEnvironment()) {
+            $this->errorHandler->register();
+        }
 
         // Set security headers only if not in testing environment
         if (!$this->isTestingEnvironment()) {
