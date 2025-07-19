@@ -26,8 +26,7 @@ class User extends BaseModel
      */
     public static function findByEmail(string $email): ?static
     {
-        $users = self::where('email', $email);
-        return $users[0] ?? null;
+        return self::where('email', $email)->firstInstance();
     }
 
     /**
