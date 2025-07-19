@@ -57,24 +57,18 @@ if (!function_exists('mockUnauthenticated')) {
 if (!function_exists('captureOutput')) {
     function captureOutput(callable $callback): string
     {
-        // Clear any existing output buffers
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
-
-        // Start new output buffer
+        $level = ob_get_level();
         ob_start();
-
         try {
             $callback();
-        } catch (Exception $e) {
-            ob_end_clean();
-            throw $e;
+            $output = ob_get_contents();
+            return $output ?: '';
+        } finally {
+            // Clean up only buffers we opened
+            while (ob_get_level() > $level) {
+                ob_end_clean();
+            }
         }
-
-        // Get and clean buffer
-        $output = ob_get_clean();
-        return $output ?: '';
     }
 }
 
