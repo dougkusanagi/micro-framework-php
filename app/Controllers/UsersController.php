@@ -16,6 +16,10 @@ class UsersController extends BaseController
      */
     public function index(): string
     {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            // Optionally redirect or show error
+            abort(403, 'Unauthorized');
+        }
         try {
             $users = User::all();
             return view('users/index', ['users' => $users]);
@@ -29,6 +33,10 @@ class UsersController extends BaseController
      */
     public function show(Request $request): string
     {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            // Optionally redirect or show error
+            abort(403, 'Unauthorized');
+        }
         $id = $request->getRouteParam('id');
 
         try {
@@ -49,6 +57,10 @@ class UsersController extends BaseController
      */
     public function create(): string
     {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            // Optionally redirect or show error
+            abort(403, 'Unauthorized');
+        }
         return view('users/create');
     }
 
@@ -57,6 +69,10 @@ class UsersController extends BaseController
      */
     public function store(Request $request): string
     {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            // Optionally redirect or show error
+            abort(403, 'Unauthorized');
+        }
         $data = $request->all();
 
         // Validate data
@@ -79,6 +95,10 @@ class UsersController extends BaseController
      */
     public function edit(Request $request): string
     {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            // Optionally redirect or show error
+            abort(403, 'Unauthorized');
+        }
         $id = $request->getRouteParam('id');
 
         try {
@@ -99,6 +119,10 @@ class UsersController extends BaseController
      */
     public function update(Request $request): string
     {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            // Optionally redirect or show error
+            abort(403, 'Unauthorized');
+        }
         $id = $request->getRouteParam('id');
         $data = $request->all();
 
@@ -142,6 +166,10 @@ class UsersController extends BaseController
      */
     public function delete(Request $request): string
     {
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            // Optionally redirect or show error
+            abort(403, 'Unauthorized');
+        }
         $id = $request->getRouteParam('id');
 
         try {

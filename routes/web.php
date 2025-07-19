@@ -43,6 +43,24 @@ return [
     ['GET', '/cache-examples/forever', [CacheExamplesController::class, 'foreverCache']],
     ['GET', '/cache-examples/clear', [CacheExamplesController::class, 'clearCache']],
 
+    // Posts CRUD
+    ['GET', '/posts', [PostsController::class, 'index']],
+    ['GET', '/posts/create', [PostsController::class, 'create']],
+    ['POST', '/posts', [PostsController::class, 'store']],
+    ['GET', '/posts/{id}', [PostsController::class, 'show']],
+    ['GET', '/posts/{id}/edit', [PostsController::class, 'edit']],
+    ['POST', '/posts/{id}/update', [PostsController::class, 'update']],
+    ['POST', '/posts/{id}/delete', [PostsController::class, 'destroy']],
+
+    // Categories CRUD
+    ['GET', '/categories', [CategoriesController::class, 'index']],
+    ['GET', '/categories/create', [CategoriesController::class, 'create']],
+    ['POST', '/categories', [CategoriesController::class, 'store']],
+    ['GET', '/categories/{id}', [CategoriesController::class, 'show']],
+    ['GET', '/categories/{id}/edit', [CategoriesController::class, 'edit']],
+    ['POST', '/categories/{id}/update', [CategoriesController::class, 'update']],
+    ['POST', '/categories/{id}/delete', [CategoriesController::class, 'destroy']],
+
     // Example routes
     // ['GET', '/user/{id}', [UserController::class, 'show']],
     // ['POST', '/contact', [ContactController::class, 'store']],
