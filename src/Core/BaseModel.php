@@ -66,22 +66,22 @@ abstract class BaseModel
     public static function find($id): ?static
     {
         $instance = new static();
-        $cacheKey = "model:{$instance->table}:find:{$id}";
+        
+        // Temporarily disable caching to fix type error
+        // TODO: Implement proper object serialization in cache
+        $stmt = $instance->db->prepare("SELECT * FROM {$instance->table} WHERE {$instance->primaryKey} = :id LIMIT 1");
+        $stmt->execute(['id' => $id]);
 
-        return CacheFacade::remember($cacheKey, function () use ($instance, $id) {
-            $stmt = $instance->db->prepare("SELECT * FROM {$instance->table} WHERE {$instance->primaryKey} = :id LIMIT 1");
-            $stmt->execute(['id' => $id]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($data) {
+            $model = new static();
+            $model->attributes = $data;
+            $model->exists = true;
+            return $model;
+        }
 
-            if ($data) {
-                $instance->attributes = $data;
-                $instance->exists = true;
-                return $instance;
-            }
-
-            return null;
-        }, $instance->cacheTtl);
+        return null;
     }
 
     /**

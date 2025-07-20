@@ -223,5 +223,20 @@ if (!function_exists('cache_tags')) {
     }
 }
 
+/**
+ * Hash the given value against the bcrypt algorithm.
+ *
+ * @param  string  $value
+ * @param  array  $options
+ * @return string
+ */
+if (!function_exists('bcrypt')) {
+    function bcrypt(string $value, array $options = []): string
+    {
+        $cost = $options['cost'] ?? 10;
+        return password_hash($value, PASSWORD_BCRYPT, ['cost' => $cost]);
+    }
+}
+
 // Include View helpers
 require_once __DIR__ . '/View/helpers.php';

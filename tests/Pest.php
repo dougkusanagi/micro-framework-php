@@ -14,7 +14,9 @@
 // Load test helpers
 require_once __DIR__ . '/helpers.php';
 
-uses(Tests\TestCase::class)->in('Feature');
+// Only apply TestCase to Feature and Unit tests
+// This prevents conflicts with test files that might already extend TestCase
+uses(Tests\TestCase::class)->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------

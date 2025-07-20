@@ -3,7 +3,7 @@
 namespace GuepardoSys\CLI\Commands;
 
 use GuepardoSys\Core\Database;
-use GuepardoSys\Core\Migration;
+use GuepardoSys\Core\MigrationRunner;
 
 /**
  * Migrate Rollback Command
@@ -43,21 +43,9 @@ class MigrateRollbackCommand
 
         try {
             $pdo = Database::getConnection();
-            $migration = new Migration($pdo);
-
-            $result = $migration->down($this->step);
-
-            if (empty($result)) {
-                echo "No migrations to rollback" . PHP_EOL;
-            } else {
-                echo "✓ Rollback completed successfully!" . PHP_EOL;
-                echo "  Rolled back: " . count($result) . " migration(s)" . PHP_EOL;
-
-                // Show rolled back migrations
-                foreach ($result as $migrationFile) {
-                    echo "  - {$migrationFile}" . PHP_EOL;
-                }
-            }
+            $migrationsPath = BASE_PATH . '/database/migrations';
+            $migrationRunner = new MigrationRunner($migrationsPath, $pdo);
+            $migrationRunner->rollback($this->step);
         } catch (\Exception $e) {
             echo "✗ Error rolling back migrations: " . $e->getMessage() . PHP_EOL;
             exit(1);

@@ -98,4 +98,9 @@ Examples:
   ./guepardo stan src app
 ";
     }
+
+    public function getDescription(): string
+    {
+        return 'Run PHPStan static analysis on the codebase';
+    }
 }

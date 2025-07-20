@@ -9,12 +9,15 @@
 
 use App\Controllers\HomeController;
 use App\Controllers\UsersController;
+use App\Controllers\PostsController;
+use App\Controllers\CategoriesController;
 use App\Controllers\SimpleAuthController;
 use App\Controllers\CacheExamplesController;
 
 return [
     ['GET', '/', [HomeController::class, 'index']],
     ['GET', '/about', [HomeController::class, 'about']],
+    ['GET', '/blog', [HomeController::class, 'blog']],
     ['GET', '/teste', [HomeController::class, 'teste']],
     ['GET', '/frontend-demo', [HomeController::class, 'frontendDemo']],
 

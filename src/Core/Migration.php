@@ -132,7 +132,7 @@ class Migration
     }
 
     /**
-     * Get all migration files
+     * Get all migration files (.php and .sql)
      */
     private function getAllMigrationFiles(): array
     {
@@ -144,7 +144,8 @@ class Migration
         $migrations = [];
 
         foreach ($files as $file) {
-            if (pathinfo($file, PATHINFO_EXTENSION) === 'sql') {
+            $ext = pathinfo($file, PATHINFO_EXTENSION);
+            if ($ext === 'sql' || $ext === 'php') {
                 $migrations[] = pathinfo($file, PATHINFO_FILENAME);
             }
         }
@@ -167,77 +168,139 @@ class Migration
      */
     private function getMigrationsToRollback(int $steps): array
     {
-        $stmt = $this->pdo->prepare("
+        $steps = (int) $steps; // Ensure steps is always an integer for LIMIT
+        $sql = "
             SELECT migration 
             FROM migrations 
             ORDER BY id DESC 
-            LIMIT ?
-        ");
-        $stmt->execute([$steps]);
+            LIMIT $steps
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
-     * Execute migration file
+     * Execute migration file (.php or .sql)
      */
     private function executeMigration(string $migration): void
     {
-        $filePath = $this->migrationsPath . '/' . $migration . '.sql';
+        $phpPath = $this->migrationsPath . '/' . $migration . '.php';
+        $sqlPath = $this->migrationsPath . '/' . $migration . '.sql';
 
-        if (!file_exists($filePath)) {
-            throw new Exception("Migration file not found: {$filePath}");
+        if (file_exists($phpPath)) {
+            require_once $phpPath;
+            $className = $this->getMigrationClassName($migration);
+            if (!class_exists($className)) {
+                throw new Exception("Migration class not found: {$className}");
+            }
+            $instance = new $className();
+            if (!method_exists($instance, 'up')) {
+                throw new Exception("Migration class missing up() method: {$className}");
+            }
+            $instance->up($this->pdo);
+        } elseif (file_exists($sqlPath)) {
+            $sql = file_get_contents($sqlPath);
+            $this->pdo->exec($sql);
+        } else {
+            throw new Exception("Migration file not found: {$migration}");
         }
-
-        $sql = file_get_contents($filePath);
-        $this->pdo->exec($sql);
     }
 
     /**
-     * Rollback migration (basic implementation)
+     * Rollback migration (.php or .sql)
      */
     private function rollbackMigration(string $migration): void
     {
-        // For now, we'll implement basic rollback
-        // In a more complete system, we'd have separate UP and DOWN files
-        echo "Warning: Rollback not implemented for {$migration}" . PHP_EOL;
+        $phpPath = $this->migrationsPath . '/' . $migration . '.php';
+        $sqlPath = $this->migrationsPath . '/' . $migration . '.sql';
+
+        if (file_exists($phpPath)) {
+            require_once $phpPath;
+            $className = $this->getMigrationClassName($migration);
+            if (!class_exists($className)) {
+                throw new Exception("Migration class not found: {$className}");
+            }
+            $instance = new $className();
+            if (!method_exists($instance, 'down')) {
+                throw new Exception("Migration class missing down() method: {$className}");
+            }
+            $instance->down($this->pdo);
+        } elseif (file_exists($sqlPath)) {
+            // No automatic rollback for SQL migrations
+            throw new Exception("Rollback not supported for SQL migration: {$migration}");
+        } else {
+            throw new Exception("Migration file not found: {$migration}");
+        }
     }
 
     /**
-     * Execute seed file
+     * Get migration class name from file name
+     */
+    private function getMigrationClassName(string $migration): string
+    {
+        // Example: 001_create_migrations_table => CreateMigrationsTable
+        $parts = explode('_', $migration, 2);
+        $name = isset($parts[1]) ? $parts[1] : $parts[0];
+        $name = str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $name)));
+        return $name;
+    }
+
+    /**
+     * Execute seed file (PHP with run())
      */
     private function executeSeed(string $seedFile): void
     {
-        $filePath = $this->seedsPath . '/' . $seedFile;
-
+        $filePath = $this->seedsPath . '/' . $seedFile . '.php';
         if (!file_exists($filePath)) {
             throw new Exception("Seed file not found: {$filePath}");
         }
-
-        $sql = file_get_contents($filePath);
-        $this->pdo->exec($sql);
+        require_once $filePath;
+        $className = $this->getSeedClassName($seedFile);
+        if (!class_exists($className)) {
+            throw new Exception("Seed class not found: {$className}");
+        }
+        $instance = new $className();
+        if (!method_exists($instance, 'run')) {
+            throw new Exception("Seed class missing run() method: {$className}");
+        }
+        $instance->run($this->pdo);
     }
 
     /**
-     * Get seed files
+     * Get seed files (PHP only)
      */
     private function getSeedFiles(): array
     {
         if (!is_dir($this->seedsPath)) {
             return [];
         }
-
         $files = scandir($this->seedsPath);
         $seeds = [];
-
         foreach ($files as $file) {
-            if (pathinfo($file, PATHINFO_EXTENSION) === 'sql') {
-                $seeds[] = $file;
+            if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+                $seeds[] = pathinfo($file, PATHINFO_FILENAME);
             }
         }
-
         sort($seeds);
         return $seeds;
+    }
+
+    /**
+     * Get seed class name from file name
+     */
+    private function getSeedClassName(string $seedFile): string
+    {
+        // Example: UsersSeeder => UsersSeeder
+        // Example: 001_users_seeder => UsersSeeder
+        $parts = explode('_', $seedFile, 2);
+        $name = isset($parts[1]) ? $parts[1] : $parts[0];
+        $name = str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $name)));
+        if (stripos($name, 'seeder') === false) {
+            $name .= 'Seeder';
+        }
+        return $name;
     }
 
     /**
@@ -377,5 +440,105 @@ class Migration
         ];
 
         return new PDO($dsn, $username, $password, $options);
+    }
+}
+
+class MigrationRunner
+{
+    protected $migrationsPath;
+    protected $pdo;
+    protected $table = 'migrations';
+
+    public function __construct($migrationsPath, $pdo)
+    {
+        $this->migrationsPath = $migrationsPath;
+        $this->pdo = $pdo;
+        $this->ensureMigrationsTable();
+    }
+
+    protected function ensureMigrationsTable()
+    {
+        $this->pdo->exec("CREATE TABLE IF NOT EXISTS {$this->table} (id INTEGER PRIMARY KEY AUTOINCREMENT, migration VARCHAR(255), batch INTEGER, migrated_at DATETIME)");
+    }
+
+    public function getAppliedMigrations()
+    {
+        $stmt = $this->pdo->query("SELECT migration FROM {$this->table}");
+        return $stmt ? $stmt->fetchAll(\PDO::FETCH_COLUMN) : [];
+    }
+
+    public function discoverMigrations()
+    {
+        $files = glob($this->migrationsPath . '/*.php');
+        sort($files);
+        return $files;
+    }
+
+    public function migrate()
+    {
+        $applied = $this->getAppliedMigrations();
+        $files = $this->discoverMigrations();
+        $batch = $this->getNextBatchNumber();
+        foreach ($files as $file) {
+            $class = $this->getClassNameFromFile($file);
+            if (!in_array($class, $applied)) {
+                require_once $file;
+                $migration = new $class();
+                $migration->up();
+                $this->recordMigration($class, $batch);
+                echo "Migrated: $class\n";
+            }
+        }
+    }
+
+    public function rollback($steps = 1)
+    {
+        $applied = $this->getAppliedMigrationsWithBatch();
+        $batches = array_unique(array_column($applied, 'batch'));
+        rsort($batches);
+        $batches = array_slice($batches, 0, $steps);
+        foreach ($applied as $row) {
+            if (in_array($row['batch'], $batches)) {
+                $file = $this->migrationsPath . '/' . $row['migration'] . '.php';
+                if (file_exists($file)) {
+                    require_once $file;
+                    $migration = new $row['migration']();
+                    $migration->down();
+                    $this->removeMigration($row['migration']);
+                    echo "Rolled back: {$row['migration']}\n";
+                }
+            }
+        }
+    }
+
+    protected function getNextBatchNumber()
+    {
+        $stmt = $this->pdo->query("SELECT MAX(batch) FROM {$this->table}");
+        $max = $stmt ? $stmt->fetchColumn() : 0;
+        return $max + 1;
+    }
+
+    protected function getAppliedMigrationsWithBatch()
+    {
+        $stmt = $this->pdo->query("SELECT migration, batch FROM {$this->table} ORDER BY batch DESC, id DESC");
+        return $stmt ? $stmt->fetchAll(\PDO::FETCH_ASSOC) : [];
+    }
+
+    protected function recordMigration($class, $batch)
+    {
+        $stmt = $this->pdo->prepare("INSERT INTO {$this->table} (migration, batch, migrated_at) VALUES (?, ?, ?)");
+        $stmt->execute([$class, $batch, date('Y-m-d H:i:s')]);
+    }
+
+    protected function removeMigration($class)
+    {
+        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE migration = ?");
+        $stmt->execute([$class]);
+    }
+
+    protected function getClassNameFromFile($file)
+    {
+        // Assumes class name matches file name (without .php)
+        return pathinfo($file, PATHINFO_FILENAME);
     }
 }

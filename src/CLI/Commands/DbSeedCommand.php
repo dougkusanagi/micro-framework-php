@@ -3,7 +3,7 @@
 namespace GuepardoSys\CLI\Commands;
 
 use GuepardoSys\Core\Database;
-use GuepardoSys\Core\Migration;
+use GuepardoSys\Core\SeederRunner;
 
 /**
  * Database Seed Command
@@ -21,47 +21,14 @@ class DbSeedCommand
 
     public function execute(array $args): void
     {
-        // Parse arguments
         $this->parseArguments($args);
 
-        // Confirmation for seeding
-        if (!$this->force) {
-            echo "This will run database seeds." . PHP_EOL;
-            echo "Are you sure you want to continue? (yes/no): ";
-
-            $handle = fopen("php://stdin", "r");
-            $input = trim(fgets($handle));
-            fclose($handle);
-
-            if (!in_array(strtolower($input), ['yes', 'y'])) {
-                echo "Seeding cancelled." . PHP_EOL;
-                return;
-            }
-        }
+        $pdo = Database::getConnection();
+        $seedsPath = BASE_PATH . '/database/seeds';
+        $seederRunner = new SeederRunner($seedsPath, $pdo);
 
         echo "Running database seeds..." . PHP_EOL;
-
-        try {
-            $pdo = Database::getConnection();
-            $migration = new Migration($pdo);
-
-            $result = $migration->seed();
-
-            if (empty($result)) {
-                echo "No seed files found" . PHP_EOL;
-            } else {
-                echo "✓ Seeds completed successfully!" . PHP_EOL;
-                echo "  Executed: " . count($result) . " seed file(s)" . PHP_EOL;
-
-                // Show executed seeds
-                foreach ($result as $seedFile) {
-                    echo "  - {$seedFile}" . PHP_EOL;
-                }
-            }
-        } catch (\Exception $e) {
-            echo "✗ Error running seeds: " . $e->getMessage() . PHP_EOL;
-            exit(1);
-        }
+        $seederRunner->run('DatabaseSeeder');
     }
 
     /**

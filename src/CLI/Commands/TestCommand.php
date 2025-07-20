@@ -28,7 +28,7 @@ class TestCommand
         if (!file_exists($pestPath)) {
             $pestPath = DIRECTORY_SEPARATOR === '\\' ? 'vendor\\bin\\pest' : 'vendor/bin/pest';
         }
-        
+
         $command = $pestPath;
 
         // Add coverage option
@@ -47,6 +47,9 @@ class TestCommand
         // Add testsuite option
         if (!empty($options['testsuite'])) {
             $command .= ' --testsuite=' . $options['testsuite'];
+        } else {
+            // Use the "All" testsuite by default to run all tests
+            $command .= ' --testsuite=All';
         }
 
         // Add parallel option

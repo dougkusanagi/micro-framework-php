@@ -59,6 +59,11 @@ class AssetCommand
         $this->console->success('🎉 Assets cleaned successfully!');
     }
 
+    public function getDescription(): string
+    {
+        return 'Manage and build frontend assets (CSS, JS, etc.)';
+    }
+
     private function optimizeAssets()
     {
         $publicPath = getcwd() . '/public/assets';

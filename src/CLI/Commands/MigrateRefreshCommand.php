@@ -3,7 +3,8 @@
 namespace GuepardoSys\CLI\Commands;
 
 use GuepardoSys\Core\Database;
-use GuepardoSys\Core\Migration;
+use GuepardoSys\Core\MigrationRunner;
+use GuepardoSys\Core\SeederRunner;
 
 /**
  * Migrate Refresh Command
@@ -22,10 +23,8 @@ class MigrateRefreshCommand
 
     public function execute(array $args): void
     {
-        // Parse arguments
         $this->parseArguments($args);
 
-        // Confirmation for refresh
         if (!$this->force) {
             echo "This will rollback ALL migrations and run them again." . PHP_EOL;
             echo "Are you sure you want to continue? (yes/no): ";
@@ -40,72 +39,27 @@ class MigrateRefreshCommand
             }
         }
 
-        try {
-            $pdo = Database::getConnection();
-            $migration = new Migration($pdo);
+        $pdo = Database::getConnection();
+        $migrationsPath = BASE_PATH . '/database/migrations';
+        $seedsPath = BASE_PATH . '/database/seeds';
+        $migrationRunner = new MigrationRunner($migrationsPath, $pdo);
+        $seederRunner = new SeederRunner($seedsPath, $pdo);
 
-            // Get all executed migrations count
-            $executedCount = $this->getExecutedMigrationsCount($pdo);
+        // Rollback all migrations
+        echo "Rolling back all migrations..." . PHP_EOL;
+        // We'll rollback a large number to ensure all are rolled back
+        $migrationRunner->rollback(9999);
 
-            if ($executedCount > 0) {
-                echo "Rolling back all migrations..." . PHP_EOL;
+        // Run migrations again
+        echo "Running migrations..." . PHP_EOL;
+        $migrationRunner->migrate();
 
-                // Rollback all migrations
-                $rollbackResult = $migration->down($executedCount);
-
-                if (!empty($rollbackResult)) {
-                    echo "✓ Rolled back " . count($rollbackResult) . " migration(s)" . PHP_EOL;
-                } else {
-                    echo "No migrations to rollback" . PHP_EOL;
-                }
-            }
-
-            // Run migrations again
-            echo "Running migrations..." . PHP_EOL;
-            $result = $migration->up();
-
-            if (isset($result['message'])) {
-                echo $result['message'] . PHP_EOL;
-            } else {
-                echo "✓ Migrations completed successfully!" . PHP_EOL;
-                echo "  Batch: {$result['batch']}" . PHP_EOL;
-                echo "  Executed: " . count($result['executed']) . " migration(s)" . PHP_EOL;
-            }
-
-            // Run seeds if requested
-            if ($this->seed) {
-                echo PHP_EOL . "Running seeds..." . PHP_EOL;
-                $seedResult = $migration->seed();
-
-                if (empty($seedResult)) {
-                    echo "No seed files found" . PHP_EOL;
-                } else {
-                    echo "✓ Seeds completed successfully!" . PHP_EOL;
-                    echo "  Executed: " . count($seedResult) . " seed file(s)" . PHP_EOL;
-                }
-            }
-        } catch (\Exception $e) {
-            echo "✗ Error refreshing migrations: " . $e->getMessage() . PHP_EOL;
-            exit(1);
+        if ($this->seed) {
+            echo PHP_EOL . "Running seeds..." . PHP_EOL;
+            $seederRunner->run();
         }
     }
 
-    /**
-     * Get count of executed migrations
-     */
-    private function getExecutedMigrationsCount(\PDO $pdo): int
-    {
-        try {
-            $stmt = $pdo->query("SELECT COUNT(*) FROM migrations");
-            return (int) $stmt->fetchColumn();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
-     * Parse command arguments
-     */
     private function parseArguments(array $args): void
     {
         foreach ($args as $arg) {
@@ -124,9 +78,6 @@ class MigrateRefreshCommand
         }
     }
 
-    /**
-     * Show help information
-     */
     private function showHelp(): void
     {
         echo "Usage: php guepardo migrate:refresh [options]" . PHP_EOL;

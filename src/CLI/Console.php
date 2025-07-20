@@ -26,6 +26,7 @@ use GuepardoSys\CLI\Commands\QualityCommand;
 use GuepardoSys\CLI\Commands\BuildCommand;
 use GuepardoSys\CLI\Commands\DeployCommand;
 use GuepardoSys\CLI\Commands\HealthCommand;
+use GuepardoSys\CLI\Commands\KeyGenerateCommand;
 
 /**
  * Console Application
@@ -86,11 +87,7 @@ class Console
 
             // Health check command
             'health' => HealthCommand::class,
-            'deploy' => DeployCommand::class,
-
-            // Health check command
-            'health' => HealthCommand::class,
-
+            'key:generate' => KeyGenerateCommand::class,
             'help' => HelpCommand::class,
         ];
     }

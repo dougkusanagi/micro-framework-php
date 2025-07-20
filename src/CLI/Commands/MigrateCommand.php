@@ -4,6 +4,9 @@ namespace GuepardoSys\CLI\Commands;
 
 use GuepardoSys\Core\Database;
 use GuepardoSys\Core\Migration;
+use GuepardoSys\Core\SeederRunner;
+use PDOException;
+use PDO;
 
 /**
  * Migrate Command
@@ -22,76 +25,93 @@ class MigrateCommand
 
     public function execute(array $args): void
     {
-        // Parse arguments
         $this->parseArguments($args);
-
-        // Check if database exists
-        if (!Migration::databaseExists()) {
-            if (!$this->force) {
-                echo "Database does not exist." . PHP_EOL;
-                echo "Do you want to create it? (yes/no): ";
-
-                $handle = fopen("php://stdin", "r");
-                $input = trim(fgets($handle));
-                fclose($handle);
-
-                if (!in_array(strtolower($input), ['yes', 'y'])) {
-                    echo "Migration cancelled." . PHP_EOL;
-                    return;
-                }
-            }
-
-            echo "Creating database..." . PHP_EOL;
-            if (!Migration::createDatabase()) {
-                echo "Failed to create database." . PHP_EOL;
-                exit(1);
-            }
-            echo "✓ Database created successfully" . PHP_EOL;
-        }
-
-        // Run migrations
-        echo "Running migrations..." . PHP_EOL;
 
         try {
             $pdo = Database::getConnection();
+            $migrationsPath = BASE_PATH . '/database/migrations';
+            $seedsPath = BASE_PATH . '/database/seeds';
+
             $migration = new Migration($pdo);
+            $seederRunner = new SeederRunner($seedsPath, $pdo);
 
-            $result = $migration->up();
+            echo "Running migrations..." . PHP_EOL;
+            $migration->up();
 
-            if (isset($result['message'])) {
-                echo $result['message'] . PHP_EOL;
-            } else {
-                echo "✓ Migrations completed successfully!" . PHP_EOL;
-                echo "  Batch: {$result['batch']}" . PHP_EOL;
-                echo "  Executed: " . count($result['executed']) . " migration(s)" . PHP_EOL;
-
-                // Show executed migrations
-                foreach ($result['executed'] as $migrationFile) {
-                    echo "  - {$migrationFile}" . PHP_EOL;
-                }
-            }
-
-            // Run seeds if requested
             if ($this->seed) {
                 echo PHP_EOL . "Running seeds..." . PHP_EOL;
-                $seedResult = $migration->seed();
-
-                if (empty($seedResult)) {
-                    echo "No seed files found" . PHP_EOL;
-                } else {
-                    echo "✓ Seeds completed successfully!" . PHP_EOL;
-                    echo "  Executed: " . count($seedResult) . " seed file(s)" . PHP_EOL;
-
-                    // Show executed seeds
-                    foreach ($seedResult as $seedFile) {
-                        echo "  - {$seedFile}" . PHP_EOL;
-                    }
-                }
+                $seederRunner->run('DatabaseSeeder');
             }
-        } catch (\Exception $e) {
-            echo "✗ Error running migrations: " . $e->getMessage() . PHP_EOL;
-            exit(1);
+        } catch (PDOException $e) {
+            // Check if the error is about unknown database
+            if (strpos($e->getMessage(), 'Unknown database') !== false) {
+                $dbName = $this->extractDatabaseName($e->getMessage());
+                echo "Database '{$dbName}' does not exist." . PHP_EOL;
+                echo "Would you like to create it? (y/n): ";
+                $answer = trim(fgets(STDIN));
+                
+                if (strtolower($answer) === 'y') {
+                    $this->createDatabase($dbName);
+                    echo "Database '{$dbName}' created successfully." . PHP_EOL;
+                    echo "Retrying migrations..." . PHP_EOL;
+                    $this->execute($args); // Retry the migration
+                } else {
+                    echo "Migration aborted." . PHP_EOL;
+                }
+            } else {
+                // For other database errors, just show the message
+                echo "Error: " . $e->getMessage() . PHP_EOL;
+            }
         }
+    }
+
+    /**
+     * Extract database name from error message
+     */
+    private function extractDatabaseName(string $errorMessage): string
+    {
+        // Default database name from config
+        $config = Database::getConfig();
+        $defaultConnection = $config['default'];
+        $dbName = $config['connections'][$defaultConnection]['database'] ?? 'guepardo';
+        
+        // Try to extract from error message
+        if (preg_match("/Unknown database '([^']+)'/", $errorMessage, $matches)) {
+            $dbName = $matches[1];
+        }
+        
+        return $dbName;
+    }
+
+    /**
+     * Create database
+     */
+    private function createDatabase(string $dbName): void
+    {
+        $config = Database::getConfig();
+        $defaultConnection = $config['default'];
+        $connectionConfig = $config['connections'][$defaultConnection];
+        
+        // Create a PDO connection without specifying a database
+        $dsn = "";
+        switch ($connectionConfig['driver']) {
+            case 'mysql':
+                $dsn = "mysql:host={$connectionConfig['host']};port={$connectionConfig['port']}";
+                break;
+            case 'pgsql':
+                $dsn = "pgsql:host={$connectionConfig['host']};port={$connectionConfig['port']}";
+                break;
+        }
+        
+        $pdo = new PDO(
+            $dsn, 
+            $connectionConfig['username'], 
+            $connectionConfig['password'], 
+            $connectionConfig['options'] ?? []
+        );
+        
+        // Create the database
+        $pdo->exec("CREATE DATABASE `{$dbName}`");
     }
 
     /**

@@ -97,6 +97,12 @@ class SimpleAuthController extends BaseController
 
         $user = $this->getAuthenticatedUser();
 
+        // Proteção contra usuário null
+        if (!$user) {
+            return '<!DOCTYPE html>
+<html><head><title>Dashboard - GuepardoSys</title></head><body><div class="container"><h2>Usuário não encontrado ou sessão expirada.</h2><a href="/login">Fazer login novamente</a></div></body></html>';
+        }
+
         return '<!DOCTYPE html>
 <html>
 <head>

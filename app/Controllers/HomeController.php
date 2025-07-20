@@ -113,4 +113,18 @@ class HomeController extends BaseController
 
         return $this->view('pages.frontend-demo', $data);
     }
+
+    /**
+     * Display the blog page
+     */
+    public function blog(): string
+    {
+        $data = [
+            'appName' => 'GuepardoSys Micro PHP',
+            'title' => 'Blog - GuepardoSys',
+            'currentRoute' => 'blog'
+        ];
+
+        return $this->view('pages.blog', $data);
+    }
 }
