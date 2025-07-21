@@ -1,5 +1,7 @@
 <?php
 
+use GuepardoSys\Core\View\View;
+
 /**
  * Funções helper para o sistema de views
  */
@@ -13,7 +15,7 @@ if (!function_exists('view')) {
         static $viewEngine = null;
 
         if ($viewEngine === null) {
-            $viewEngine = new \GuepardoSys\Core\View\View();
+            $viewEngine = new View();
         }
 
         return $viewEngine->render($view, $data);
@@ -34,9 +36,9 @@ if (!function_exists('clearViewCache')) {
     /**
      * Limpa o cache de views
      */
-    function clearViewCache(): void
+    function clearViewCache(): int
     {
-        $viewEngine = new \GuepardoSys\Core\View\View();
-        $viewEngine->clearCache();
+        $viewEngine = new View();
+        return $viewEngine->clearCache();
     }
 }

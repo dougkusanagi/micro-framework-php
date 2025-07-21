@@ -12,6 +12,11 @@ class CsCommand
         return self::handle($args);
     }
 
+    public static function getDescription(): string
+    {
+        return "Run PHP_CodeSniffer for code style analysis.";
+    }
+
     public static function handle(array $args): int
     {
         $options = self::parseOptions($args);

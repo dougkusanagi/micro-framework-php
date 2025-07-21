@@ -1,1 +1,0 @@
-@if($show)Visible content@endif

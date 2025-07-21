@@ -4,6 +4,8 @@ namespace App\Models;
 
 use GuepardoSys\Core\BaseModel;
 
+use GuepardoSys\Core\Security\Hash;
+
 /**
  * User Model
  */
@@ -36,7 +38,7 @@ class User extends BaseModel
      */
     public function setPassword(string $password): void
     {
-        $this->attributes['password'] = password_hash($password, PASSWORD_DEFAULT);
+        $this->attributes['password'] = Hash::make($password);
     }
 
     /**
@@ -47,7 +49,7 @@ class User extends BaseModel
      */
     public function verifyPassword(string $password): bool
     {
-        return password_verify($password, $this->attributes['password'] ?? '');
+        return Hash::check($password, $this->attributes['password'] ?? '');
     }
 
     /**
@@ -70,7 +72,7 @@ class User extends BaseModel
     {
         // Hash password if provided
         if (isset($data['password'])) {
-            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            $data['password'] = Hash::make($data['password']);
         }
 
         // Add timestamps
@@ -90,7 +92,7 @@ class User extends BaseModel
     {
         // Hash password if provided
         if (isset($data['password'])) {
-            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+            $data['password'] = Hash::make($data['password']);
         }
 
         // Update timestamp

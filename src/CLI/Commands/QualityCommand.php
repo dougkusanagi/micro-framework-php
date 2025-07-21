@@ -7,6 +7,11 @@ namespace GuepardoSys\CLI\Commands;
  */
 class QualityCommand
 {
+    public function getDescription(): string
+    {
+        return 'Run all quality checks';
+    }
+
     public function execute(array $args): int
     {
         return self::handle($args);

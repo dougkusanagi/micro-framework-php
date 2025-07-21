@@ -233,8 +233,7 @@ if (!function_exists('cache_tags')) {
 if (!function_exists('bcrypt')) {
     function bcrypt(string $value, array $options = []): string
     {
-        $cost = $options['cost'] ?? 10;
-        return password_hash($value, PASSWORD_BCRYPT, ['cost' => $cost]);
+        return \GuepardoSys\Core\Security\Hash::make($value, $options);
     }
 }
 

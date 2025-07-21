@@ -6,9 +6,9 @@ class UsersSeeder extends BaseSeeder
 {
     public function run()
     {
-        $password = bcrypt('password');
+        $password = password_hash('password', PASSWORD_BCRYPT);
         $this->exec(<<<SQL
-            INSERT INTO users (name, email, password) VALUES ('Admin', 'admin@example.com', '{$password}')
+            INSERT INTO users (name, email, password) VALUES ('Test User', 'test@example.com', '{$password}')
         SQL);
     }
 }

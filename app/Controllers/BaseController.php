@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use GuepardoSys\Core\Response;
+use GuepardoSys\Core\View\View;
 
 /**
  * Base Controller Class
@@ -12,37 +13,11 @@ use GuepardoSys\Core\Response;
 abstract class BaseController
 {
     /**
-     * Render a view using PHP includes (fallback para quando template engine tem problemas)
+     * Render a view using the template engine
      */
     protected function view(string $view, array $data = []): string
     {
-        return $this->viewLegacy($view, $data);
-    }
-
-    /**
-     * Render a view using PHP includes (legacy method)
-     */
-    protected function viewLegacy(string $view, array $data = []): string
-    {
-        $viewPath = APP_PATH . '/Views/' . str_replace('.', '/', $view) . '.php';
-
-        if (!file_exists($viewPath)) {
-            throw new \Exception("View {$view} not found at {$viewPath}");
-        }
-
-        // Extract variables for the view
-        extract($data);
-
-        // Start output buffering
-        ob_start();
-
-        // Include the view file
-        include $viewPath;
-
-        // Get the content and clean the buffer
-        $content = ob_get_clean();
-
-        return $content;
+        return view($view, $data);
     }
 
     /**

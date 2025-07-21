@@ -19,45 +19,9 @@ class SimpleAuthController extends BaseController
             header('Location: /dashboard');
             exit;
         }
-
-        return '<!DOCTYPE html>
-<html>
-<head>
-    <title>Login - GuepardoSys</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-        .container { max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #555; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #005a87; }
-        .links { text-align: center; margin-top: 20px; }
-        .links a { color: #007cba; text-decoration: none; }
-        .links a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Login</h2>
-        <form method="POST" action="/login">
-            <div class="form-group">
-                <label>Email:</label>
-                <input type="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label>Password:</label>
-                <input type="password" name="password" required>
-            </div>
-            <button type="submit">Login</button>
-        </form>
-        <div class="links">
-            <a href="/register">Need an account? Register here</a>
-        </div>
-    </div>
-</body>
-</html>';
+        // Optionally pass error from query string
+        $error = $_GET['error'] ?? null;
+        return view('auth/login', ['error' => $error]);
     }
 
     /**
@@ -75,13 +39,15 @@ class SimpleAuthController extends BaseController
 
         $user = User::findByEmail($email);
 
-        if ($user && $user->verifyPassword($password)) {
+        if ($user && password_verify($password, $user->password)) {
             $this->loginUser($user);
             header('Location: /dashboard');
             exit;
         }
 
-        header('Location: /login?error=1');
+        // Redirect back with error
+        $_SESSION['error_message'] = 'Invalid credentials. Please try again.';
+        header('Location: /login');
         exit;
     }
 
@@ -99,43 +65,10 @@ class SimpleAuthController extends BaseController
 
         // Proteção contra usuário null
         if (!$user) {
-            return '<!DOCTYPE html>
-<html><head><title>Dashboard - GuepardoSys</title></head><body><div class="container"><h2>Usuário não encontrado ou sessão expirada.</h2><a href="/login">Fazer login novamente</a></div></body></html>';
+            $this->redirect('/login');
         }
 
-        return '<!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard - GuepardoSys</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; }
-        .header { background: #007cba; color: white; padding: 20px; }
-        .container { max-width: 800px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { margin: 0; }
-        .user-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .btn { display: inline-block; padding: 10px 20px; background: #dc3545; color: white; text-decoration: none; border-radius: 4px; }
-        .btn:hover { background: #c82333; }
-        .welcome { color: #333; margin-bottom: 20px; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>GuepardoSys Dashboard</h1>
-    </div>
-    <div class="container">
-        <div class="welcome">
-            <h2>Welcome, ' . htmlspecialchars($user->name) . '!</h2>
-        </div>
-        <div class="user-info">
-            <h3>Account Information</h3>
-            <p><strong>Name:</strong> ' . htmlspecialchars($user->name) . '</p>
-            <p><strong>Email:</strong> ' . htmlspecialchars($user->email) . '</p>
-            <p><strong>Member since:</strong> ' . date('F j, Y', strtotime($user->created_at)) . '</p>
-        </div>
-        <a href="/logout" class="btn">Logout</a>
-    </div>
-</body>
-</html>';
+        return view('auth/dashboard');
     }
 
     /**

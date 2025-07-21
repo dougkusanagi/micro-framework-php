@@ -1,1 +1,0 @@
-<h1>Admin Panel: {{ $title }}</h1>
