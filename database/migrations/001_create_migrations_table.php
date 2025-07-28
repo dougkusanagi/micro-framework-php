@@ -10,7 +10,7 @@ class CreateMigrationsTable extends BaseMigration
             CREATE TABLE IF NOT EXISTS migrations (
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 migration VARCHAR(255) NOT NULL,
-                batch INT NOT NULL,
+                batch INT NOT NULL DEFAULT 1,
                 migrated_at DATETIME
             )
         SQL);
